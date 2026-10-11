@@ -4,17 +4,17 @@ using Microsoft.UI.Xaml.Controls;
 namespace MagicBuds.App.Views;
 
 /// <summary>
-/// One equalizer band: its name over a -6 to 6 dB slider.
+/// One equalizer band: its gain over an upright -6 to 6 dB slider, and its name under it.
 /// </summary>
-public sealed partial class EqualizerBandRow : UserControl
+public sealed partial class EqualizerBand : UserControl
 {
     public static readonly DependencyProperty LabelProperty =
-        DependencyProperty.Register(nameof(Label), typeof(string), typeof(EqualizerBandRow), new PropertyMetadata(""));
+        DependencyProperty.Register(nameof(Label), typeof(string), typeof(EqualizerBand), new PropertyMetadata(""));
 
     public static readonly DependencyProperty ValueProperty =
-        DependencyProperty.Register(nameof(Value), typeof(double), typeof(EqualizerBandRow), new PropertyMetadata(0.0));
+        DependencyProperty.Register(nameof(Value), typeof(double), typeof(EqualizerBand), new PropertyMetadata(0.0));
 
-    public EqualizerBandRow()
+    public EqualizerBand()
     {
         InitializeComponent();
     }
@@ -33,4 +33,7 @@ public sealed partial class EqualizerBandRow : UserControl
         get => (double)GetValue(ValueProperty);
         set => SetValue(ValueProperty, value);
     }
+
+    // "+1.5 dB", "0 dB", "-3 dB"
+    public static string FormatGain(double gain) => $"{(gain > 0 ? "+" : "")}{gain:0.#} dB";
 }

@@ -34,9 +34,13 @@
                         <FontIcon Glyph="&#xE7F6;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem Content="Buds" Tag="Buds">
+                <NavigationViewItem Content="Audio Settings" Tag="Buds">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xE9E9;" />
+                        <FontIcon Glyph="&#xE9E9;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <RotateTransform Angle="90" />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
                 <NavigationViewItem Content="Controls and gestures" Tag="Controls">

@@ -91,6 +91,7 @@ public partial class App : Application, IDisposable
             new FlyoutNavigator(_settings),
             managed => new HeadsetViewModel(managed, _settings, lowBattery, time, headsetLogger));
         _flyout.SettingsRequested += (_, _) => ShowSettings();
+        _flyout.EqualizerRequested += (_, _) => ShowSettings("Buds");
         _flyout.QuitRequested += (_, _) => Quit();
 
         _settingsViewModel = new SettingsViewModel(
@@ -184,7 +185,8 @@ public partial class App : Application, IDisposable
         _trayTooltip.Open(edge, workArea, scale);
     }
 
-    private void ShowSettings()
+    // Opens Settings, on the page with this menu tag when there's one (otherwise where it was)
+    private void ShowSettings(string? page = null)
     {
         _flyoutWindow?.HideFlyout();
         if (_settingsViewModel is null || _settings is null)
@@ -197,6 +199,10 @@ public partial class App : Application, IDisposable
             _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts!, _settings));
             _settingsWindow.ApplyTheme(_settings.Theme);
             _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        }
+        if (page is not null)
+        {
+            _settingsWindow.ShowPage(page);
         }
         _settingsWindow.Activate();
     }

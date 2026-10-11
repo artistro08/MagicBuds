@@ -58,6 +58,13 @@ public sealed partial class SettingsWindow : Window
         _ => ElementTheme.Default,
     };
 
+    /// <summary>
+    /// Selects the menu item with this tag ("Devices", "Buds", …), which opens its page.
+    /// </summary>
+    public void ShowPage(string tag) => Navigation.SelectedItem = Navigation.MenuItems
+        .OfType<NavigationViewItem>()
+        .FirstOrDefault(item => item.Tag as string == tag) ?? Navigation.SelectedItem;
+
     private void OnPaneToggleRequested(TitleBar sender, object args) => Navigation.IsPaneOpen = !Navigation.IsPaneOpen;
 
     private void OnSelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)

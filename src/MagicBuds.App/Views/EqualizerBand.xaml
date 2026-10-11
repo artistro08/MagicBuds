@@ -1,0 +1,28 @@
+<UserControl
+    x:Class="MagicBuds.App.Views.EqualizerBand"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MagicBuds.App.Views">
+
+    <!-- Equalizer Band: the gain on top, an upright slider, and the band's name under it -->
+    <StackPanel HorizontalAlignment="Center" Spacing="8">
+        <TextBlock
+            HorizontalAlignment="Center"
+            Style="{StaticResource SecondaryTextStyle}"
+            Text="{x:Bind local:EqualizerBand.FormatGain(Value), Mode=OneWay}" />
+        <Slider
+            Height="200"
+            HorizontalAlignment="Center"
+            AutomationProperties.Name="{x:Bind Label, Mode=OneWay}"
+            Orientation="Vertical"
+            Style="{StaticResource EqualizerBandSliderStyle}"
+            TickFrequency="6"
+            TickPlacement="Outside"
+            Value="{x:Bind Value, Mode=TwoWay}" />
+        <TextBlock
+            HorizontalAlignment="Center"
+            Text="{x:Bind Label, Mode=OneWay}"
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

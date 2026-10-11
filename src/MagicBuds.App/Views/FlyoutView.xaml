@@ -241,6 +241,16 @@
                     </StackPanel>
                 </ContentControl>
                 <!-- /Active Noise Control -->
+
+                <MenuFlyoutSeparator />
+
+                <!-- Conversation Detection (disabled while disconnected) -->
+                <ContentControl IsEnabled="{x:Bind ViewModel.CurrentHeadset.IsConnected, Mode=OneWay, FallbackValue=False}" Style="{StaticResource SectionStyle}">
+                    <local:SettingToggleRow
+                        IsOn="{x:Bind ViewModel.CurrentHeadset.ConversationDetection, Mode=TwoWay, FallbackValue=False}"
+                        Subtitle="Switches to Transparency and pauses media when you talk"
+                        Title="Conversation Detection" />
+                </ContentControl>
             </StackPanel>
         </ScrollViewer>
         <!-- /Device Page -->
@@ -277,6 +287,19 @@
                     ToolTipService.ToolTip="Reconnect"
                     Visibility="{x:Bind ViewModel.CurrentHeadset.ShowReconnect, Mode=OneWay, FallbackValue=Collapsed}">
                     <local:PlugIcon IsConnected="True" Size="20" />
+                </Button>
+
+                <!-- Equalizer: opens Settings › Audio Settings -->
+                <Button
+                    Style="{StaticResource FooterIconButtonStyle}"
+                    AutomationProperties.Name="Equalizer"
+                    Command="{x:Bind ViewModel.OpenEqualizerCommand}"
+                    ToolTipService.ToolTip="Equalizer">
+                    <FontIcon FontSize="16" Glyph="&#xE9E9;" RenderTransformOrigin="0.5,0.5">
+                        <FontIcon.RenderTransform>
+                            <RotateTransform Angle="90" />
+                        </FontIcon.RenderTransform>
+                    </FontIcon>
                 </Button>
 
                 <Button

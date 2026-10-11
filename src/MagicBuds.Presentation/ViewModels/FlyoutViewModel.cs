@@ -35,6 +35,7 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
         BackCommand          = new RelayCommand(Back);
         ReconnectCommand     = new RelayCommand(Reconnect);
         OpenSettingsCommand  = new RelayCommand(() => SettingsRequested?.Invoke(this, EventArgs.Empty));
+        OpenEqualizerCommand = new RelayCommand(() => EqualizerRequested?.Invoke(this, EventArgs.Empty));
         QuitCommand          = new RelayCommand(() => QuitRequested?.Invoke(this, EventArgs.Empty));
 
         _manager.HeadsetAdded += OnHeadsetAdded;
@@ -50,6 +51,11 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     public event EventHandler? SettingsRequested;
 
     public event EventHandler? QuitRequested;
+
+    /// <summary>
+    /// The footer's equalizer button was clicked: Settings should open on the equalizer.
+    /// </summary>
+    public event EventHandler? EqualizerRequested;
 
     public ObservableCollection<HeadsetViewModel> Headsets { get; } = [];
 
@@ -88,6 +94,8 @@ public sealed class FlyoutViewModel : ObservableObject, IDisposable
     public IRelayCommand ReconnectCommand { get; }
 
     public IRelayCommand OpenSettingsCommand { get; }
+
+    public IRelayCommand OpenEqualizerCommand { get; }
 
     public IRelayCommand QuitCommand { get; }
 
