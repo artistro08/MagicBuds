@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace MagicBuds.App.Views;
 
@@ -25,7 +26,7 @@ public sealed partial class BudBatteryRing : UserControl
         DependencyProperty.Register(nameof(LevelText), typeof(string), typeof(BudBatteryRing), new PropertyMetadata("", OnTextChanged));
 
     public static readonly DependencyProperty PictureProperty =
-        DependencyProperty.Register(nameof(Picture), typeof(ImageSource), typeof(BudBatteryRing), new PropertyMetadata(null, (ring, _) => ((BudBatteryRing)ring).Bindings.Update()));
+        DependencyProperty.Register(nameof(Picture), typeof(ImageSource), typeof(BudBatteryRing), new PropertyMetadata(null, (ring, _) => ((BudBatteryRing)ring).OnPictureChanged()));
 
     public BudBatteryRing()
     {
@@ -91,6 +92,19 @@ public sealed partial class BudBatteryRing : UserControl
 
         _levelAnimation = new Storyboard { Children = { animation } };
         _levelAnimation.Begin();
+    }
+
+    // Decode the picture at its shown size (scaled for the screen) instead of shrinking the full-size
+    // file when drawing, which looks jagged. Height only, so a tall picture like the case keeps its shape.
+    private void OnPictureChanged()
+    {
+        if (Picture is BitmapImage bitmap)
+        {
+            bitmap.DecodePixelType   = DecodePixelType.Logical;
+            bitmap.DecodePixelHeight = (int)PictureImage.Height;
+        }
+
+        Bindings.Update();
     }
 
     private static void OnTextChanged(DependencyObject ring, DependencyPropertyChangedEventArgs e) => ((BudBatteryRing)ring).Bindings.Update();

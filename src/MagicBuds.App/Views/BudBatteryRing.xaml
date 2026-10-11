@@ -28,8 +28,11 @@
                 Minimum="0" />
 
             <!-- Picture, or a placeholder icon until there's one -->
+            <!-- Picture: decoded at this size in code, so it scales down smoothly -->
             <Image
-                Margin="13"
+                x:Name="PictureImage"
+                Width="40"
+                Height="40"
                 AutomationProperties.AccessibilityView="Raw"
                 Source="{x:Bind Picture, Mode=OneWay}"
                 Stretch="Uniform" />
