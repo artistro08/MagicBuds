@@ -1,0 +1,75 @@
+<local:SettingsPageBase
+    x:Class="MagicBuds.App.Views.Settings.BudsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MagicBuds.App.Views.Settings"
+    xmlns:views="using:MagicBuds.App.Views"
+    xmlns:vm="using:MagicBuds.Presentation.ViewModels">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+            <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Buds" />
+
+            <!-- Disconnected: settings can't be read or changed without the control link -->
+            <InfoBar
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.SelectedHeadset.ShowDisconnectedWarning, Mode=OneWay, FallbackValue=True}"
+                Message="{x:Bind ViewModel.SelectedHeadset.DisconnectedMessage, Mode=OneWay, FallbackValue='No Pixel Buds paired. Pair them in Bluetooth settings.'}"
+                Severity="Informational" />
+
+            <!-- Error: a change that didn't go through -->
+            <InfoBar
+                IsClosable="False"
+                IsOpen="{x:Bind ViewModel.SelectedHeadset.HasError, Mode=OneWay, FallbackValue=False}"
+                Message="{x:Bind ViewModel.SelectedHeadset.ErrorMessage, Mode=OneWay}"
+                Severity="Warning" />
+
+            <ContentControl IsEnabled="{x:Bind ViewModel.SelectedHeadset.IsConnected, Mode=OneWay, FallbackValue=False}" Style="{StaticResource SectionStyle}">
+                <StackPanel Spacing="8">
+
+                    <!-- Conversation Detection -->
+                    <Border Style="{StaticResource SettingsCardStyle}">
+                        <views:SettingToggleRow
+                            IsOn="{x:Bind ViewModel.SelectedHeadset.ConversationDetection, Mode=TwoWay, FallbackValue=False}"
+                            Subtitle="Switches to Transparency and pauses media when you talk"
+                            Title="Conversation Detection" />
+                    </Border>
+
+                    <!-- Multipoint -->
+                    <Border Style="{StaticResource SettingsCardStyle}">
+                        <views:SettingToggleRow
+                            IsOn="{x:Bind ViewModel.SelectedHeadset.Multipoint, Mode=TwoWay, FallbackValue=False}"
+                            Subtitle="Connect to any two Bluetooth devices at the same time"
+                            Title="Multipoint" />
+                    </Border>
+
+                    <!-- Equalizer -->
+                    <Border Style="{StaticResource SettingsCardStyle}">
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="Equalizer" />
+                                    <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="Adjust to your personal audio preferences" />
+                                </StackPanel>
+                                <ComboBox
+                                    Grid.Column="1"
+                                    MinWidth="150"
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.Name="Equalizer preset"
+                                    ItemsSource="{x:Bind vm:HeadsetViewModel.EqualizerPresetNames}"
+                                    PlaceholderText="Custom"
+                                    SelectedIndex="{x:Bind ViewModel.SelectedHeadset.SelectedPresetIndex, Mode=TwoWay, FallbackValue=-1}" />
+                            </Grid>
+                            <views:EqualizerBandRow Label="Upper Treble" Value="{x:Bind ViewModel.SelectedHeadset.UpperTreble, Mode=TwoWay, FallbackValue=0}" />
+                            <views:EqualizerBandRow Label="Treble" Value="{x:Bind ViewModel.SelectedHeadset.Treble, Mode=TwoWay, FallbackValue=0}" />
+                            <views:EqualizerBandRow Label="Mid" Value="{x:Bind ViewModel.SelectedHeadset.Mid, Mode=TwoWay, FallbackValue=0}" />
+                            <views:EqualizerBandRow Label="Bass" Value="{x:Bind ViewModel.SelectedHeadset.Bass, Mode=TwoWay, FallbackValue=0}" />
+                            <views:EqualizerBandRow Label="Low Bass" Value="{x:Bind ViewModel.SelectedHeadset.LowBass, Mode=TwoWay, FallbackValue=0}" />
+                        </StackPanel>
+                    </Border>
+                    <!-- /Equalizer -->
+                </StackPanel>
+            </ContentControl>
+        </StackPanel>
+    </ScrollViewer>
+</local:SettingsPageBase>

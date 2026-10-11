@@ -1,0 +1,19 @@
+<UserControl
+    x:Class="MagicBuds.App.Views.GestureInfoRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Gesture Row: the gesture's mark, then what it's called and what it does -->
+    <Grid ColumnDefinitions="40,*" ColumnSpacing="8">
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            AutomationProperties.AccessibilityView="Raw"
+            FontSize="16"
+            Text="{x:Bind Symbol, Mode=OneWay}" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+            <TextBlock Text="{x:Bind Title, Mode=OneWay}" />
+            <TextBlock Style="{StaticResource SettingSubtitleStyle}" Text="{x:Bind Subtitle, Mode=OneWay}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

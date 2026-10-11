@@ -1,0 +1,29 @@
+<UserControl
+    x:Class="MagicBuds.App.Views.BatteryRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MagicBuds.App.Views">
+
+    <!-- Battery Row: left, right and case, each a battery icon with its level. Hidden while
+         Windows doesn't have the buds. -->
+    <StackPanel
+        Orientation="Horizontal"
+        Spacing="16"
+        Visibility="{x:Bind Headset.ShowBattery, Mode=OneWay, FallbackValue=Collapsed}">
+        <local:BatteryLabel
+            Glyph="{x:Bind Headset.LeftBatteryGlyph, Mode=OneWay}"
+            Label="Left"
+            LevelText="{x:Bind Headset.LeftBatteryText, Mode=OneWay}"
+            Visibility="{x:Bind Headset.ShowLeftBattery, Mode=OneWay}" />
+        <local:BatteryLabel
+            Glyph="{x:Bind Headset.RightBatteryGlyph, Mode=OneWay}"
+            Label="Right"
+            LevelText="{x:Bind Headset.RightBatteryText, Mode=OneWay}"
+            Visibility="{x:Bind Headset.ShowRightBattery, Mode=OneWay}" />
+        <local:BatteryLabel
+            Glyph="{x:Bind Headset.CaseBatteryGlyph, Mode=OneWay}"
+            Label="Case"
+            LevelText="{x:Bind Headset.CaseBatteryText, Mode=OneWay}"
+            Visibility="{x:Bind Headset.ShowCaseBattery, Mode=OneWay}" />
+    </StackPanel>
+</UserControl>

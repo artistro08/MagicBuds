@@ -1,0 +1,11 @@
+RegisterHotKey
+UnregisterHotKey
+SetWindowsHookEx
+UnhookWindowsHookEx
+CallNextHookEx
+KBDLLHOOKSTRUCT
+HC_ACTION
+GetModuleHandle
+GetAsyncKeyState
+GetForegroundWindow
+SendInput

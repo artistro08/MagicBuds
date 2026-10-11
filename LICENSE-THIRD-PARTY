@@ -1,0 +1,57 @@
+The Noise Cancellation, Off and Transparency icons (src/MagicBuds.App/Views/NoiseModeIcon.xaml.cs)
+are the Material Symbols noise_control_on, noise_control_off and noise_aware by Google,
+https://fonts.google.com/icons, used under the Apache License 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+The shortcut picker and keyboard hook (src/MagicBuds.App/Views/Settings/ShortcutControl*,
+ShortcutDialogContentControl*, src/MagicBuds.App/Controls/KeyVisual.cs, KeyCharPresenter.cs, Styles/KeyVisual.xaml,
+Styles/KeyCharPresenter.xaml, src/MagicBuds.App/Interop/KeyboardHook.cs and
+src/MagicBuds.Presentation/Shortcuts/HotkeySettings.cs) are ported from PowerToys,
+https://github.com/microsoft/PowerToys, used under its MIT license:
+
+MIT License
+
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+The Maestro protocol details (src/MagicBuds.Presentation/Maestro) are based on pbpctrl,
+https://github.com/qzed/pbpctrl, used under its MIT license:
+
+MIT License
+
+Copyright (c) 2022 Maximilian Luz
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

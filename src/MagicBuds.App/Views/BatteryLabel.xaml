@@ -1,0 +1,17 @@
+<UserControl
+    x:Class="MagicBuds.App.Views.BatteryLabel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Battery Label: a battery icon stepped by level, then "Left 68%" -->
+    <StackPanel Orientation="Horizontal" Spacing="6">
+        <FontIcon
+            VerticalAlignment="Center"
+            AutomationProperties.AccessibilityView="Raw"
+            FontSize="16"
+            Glyph="{x:Bind Glyph, Mode=OneWay}" />
+        <TextBlock VerticalAlignment="Center">
+            <Run Text="{x:Bind Label, Mode=OneWay}" /><Run Text=" " /><Run Text="{x:Bind LevelText, Mode=OneWay}" />
+        </TextBlock>
+    </StackPanel>
+</UserControl>
