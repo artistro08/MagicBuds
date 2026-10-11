@@ -126,13 +126,12 @@
                             Style="{StaticResource SubtitleTextBlockStyle}"
                             Text="{x:Bind ViewModel.CurrentHeadset.DeviceName, Mode=OneWay}" />
 
-                        <!-- Battery Rings -->
+                        <!-- Battery Rings: shown while disconnected too, with the pictures and empty rings -->
                         <StackPanel
                             Margin="0,12,0,4"
                             HorizontalAlignment="Center"
                             Orientation="Horizontal"
-                            Spacing="20"
-                            Visibility="{x:Bind ViewModel.CurrentHeadset.ShowBattery, Mode=OneWay, FallbackValue=Collapsed}">
+                            Spacing="20">
                             <local:BudBatteryRing
                                 Label="Left"
                                 Level="{x:Bind ViewModel.CurrentHeadset.LeftBatteryLevel, Mode=OneWay, FallbackValue=0}"

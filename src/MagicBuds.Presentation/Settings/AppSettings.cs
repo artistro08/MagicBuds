@@ -24,7 +24,6 @@ public sealed class AppSettings
     private const string DebugLoggingKey = "DebugLogging";
     private const string AutoConnectKeyPrefix = "AutoConnect.";
     private const string KnownHeadsetKeyPrefix = "KnownHeadset.";
-    private const string LastCaseBatteryKeyPrefix = "LastCaseBattery.";
     private const string ShortcutKeyPrefix = "Shortcut.";
     private const string BudsColorKeyPrefix = "BudsColor.";
 
@@ -71,14 +70,17 @@ public sealed class AppSettings
     public void SetKnownHeadsetName(string headsetId, string name) => _store.SetString(KnownHeadsetKeyPrefix + headsetId, name);
 
     /// <summary>
-    /// Last charging case level the headset reported. The case only reports while an earbud
-    /// sits in it, so this fills in the rest of the time.
+    /// Last level a part of the headset reported: "Left", "Right" or "Case". The case only reports
+    /// while an earbud sits in it, and nothing reports while disconnected, so this fills in the rest.
     /// </summary>
-    public int? GetLastCaseBattery(string headsetId) =>
-        int.TryParse(_store.GetString(LastCaseBatteryKeyPrefix + headsetId), NumberStyles.Integer, CultureInfo.InvariantCulture, out var level) ? level : null;
+    public int? GetLastBattery(string headsetId, string part) =>
+        int.TryParse(_store.GetString(LastBatteryKey(headsetId, part)), NumberStyles.Integer, CultureInfo.InvariantCulture, out var level) ? level : null;
 
-    public void SetLastCaseBattery(string headsetId, int level) =>
-        _store.SetString(LastCaseBatteryKeyPrefix + headsetId, level.ToString(CultureInfo.InvariantCulture));
+    public void SetLastBattery(string headsetId, string part, int level) =>
+        _store.SetString(LastBatteryKey(headsetId, part), level.ToString(CultureInfo.InvariantCulture));
+
+    // "LastCaseBattery.<id>", the key the case level has always been saved under
+    private static string LastBatteryKey(string headsetId, string part) => $"Last{part}Battery.{headsetId}";
 
     /// <summary>
     /// The combination for a global shortcut, like "Win+F10": the default until changed, "" once cleared.

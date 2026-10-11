@@ -90,6 +90,21 @@ internal sealed class MaestroClient : IAsyncDisposable
     public event EventHandler? Closed;
 
     /// <summary>
+    /// Streams still open when the buds closed the link. The buds keep them, so the next link
+    /// cancels them with <see cref="CancelLeftoverAsync"/>.
+    /// </summary>
+    public IReadOnlyList<StreamCall> DroppedStreams { get; private set; } = [];
+
+    /// <summary>
+    /// Cancels a stream an earlier link left open on the buds. Best effort: a failed write is ignored.
+    /// </summary>
+    public Task CancelLeftoverAsync(StreamCall stream)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        return TryWriteAsync(EncodeCancel(stream.Channel, stream.Method, stream.CallId));
+    }
+
+    /// <summary>
     /// Pigweed's 65599 hash of a service or method name, which packets carry instead of names.
     /// </summary>
     public static uint Hash(string name)
@@ -335,6 +350,7 @@ internal sealed class MaestroClient : IAsyncDisposable
         }
 
         // Fail everything still waiting, then report the close once
+        DroppedStreams = [.. _calls.Where(pair => pair.Value.OnMessage is not null).Select(pair => new StreamCall(pair.Value.Channel, pair.Value.Method, pair.Key))];
         var closed = new IOException("The buds closed the control link.", error);
         // Streams have nobody waiting on them; Closed tells their owner instead
         foreach (var call in _calls.Values.Where(call => call.OnMessage is null))
@@ -427,3 +443,8 @@ internal sealed class MaestroClient : IAsyncDisposable
         public void Dispose() => dispose();
     }
 }
+
+/// <summary>
+/// A server stream open on the buds: the channel, method and call ID that cancel it.
+/// </summary>
+public sealed record StreamCall(uint Channel, string Method, uint CallId);

@@ -52,7 +52,16 @@ public sealed class HeadsetViewModelTests
         _headset.RaiseStateChanged(_headset.State with { Battery = new BatteryLevels(null, 75, 70, null, false) });
 
         Assert.AreEqual("100%", _viewModel.CaseBatteryText);
-        Assert.AreEqual(100, _settings.GetLastCaseBattery(_viewModel.Id));
+        Assert.AreEqual(100, _settings.GetLastBattery(_viewModel.Id, "Case"));
+    }
+
+    [TestMethod]
+    public void BudsKeepTheirLastLevelsWhenNothingReports()
+    {
+        _headset.RaiseStateChanged(_headset.State with { Battery = BatteryLevels.Unknown });
+
+        Assert.AreEqual("75%", _viewModel.LeftBatteryText);
+        Assert.AreEqual("70%", _viewModel.RightBatteryText);
     }
 
     [TestMethod]

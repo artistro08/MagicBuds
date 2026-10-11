@@ -208,15 +208,23 @@ public sealed class HeadsetManager : IDisposable
         }
 
         // Only act on changes: Windows repeats updates that don't change the connection
-        bool changed;
+        bool connectionChanged;
+        bool renamed;
         lock (_gate)
         {
-            changed = headset.IsWindowsConnected != device.IsConnected || headset.Name != device.Name;
+            connectionChanged = headset.IsWindowsConnected != device.IsConnected;
+            renamed           = headset.Name != device.Name;
             headset.IsWindowsConnected = device.IsConnected;
-            headset.Name = device.Name;
+            headset.Name               = device.Name;
         }
-        if (!changed)
+
+        // A new name alone just needs showing
+        if (!connectionChanged)
         {
+            if (renamed)
+            {
+                ConnectionStateChanged?.Invoke(this, headset);
+            }
             return;
         }
 

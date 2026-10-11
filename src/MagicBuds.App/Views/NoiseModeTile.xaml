@@ -19,11 +19,12 @@
             <!-- 20 px box: the drawing leaves a margin, so the visible icon is Quick Settings' 16 px -->
             <local:NoiseModeIcon Mode="{x:Bind Mode, Mode=OneWay}" />
         </ToggleButton>
-        <!-- Caption size (12), as under Quick Settings' tiles -->
+        <!-- Caption size (12), as under Quick Settings' tiles; a long label wraps, centered -->
         <TextBlock
             HorizontalAlignment="Center"
             Style="{StaticResource CaptionTextBlockStyle}"
             Text="{x:Bind Label, Mode=OneWay}"
-            TextTrimming="CharacterEllipsis" />
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
     </StackPanel>
 </UserControl>

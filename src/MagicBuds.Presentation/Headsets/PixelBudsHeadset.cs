@@ -37,6 +37,9 @@ public sealed class PixelBudsHeadset : IHeadset
     private HeadsetSnapshot _state = HeadsetSnapshot.Empty;
     private Link? _link;
 
+    // Streams a dropped link couldn't cancel, for the next link to cancel
+    private readonly List<StreamCall> _leftoverStreams = [];
+
     /// <param name="logger">Gets every packet at Debug level, and settings the buds won't read.</param>
     public PixelBudsHeadset(ILogger logger)
     {
@@ -108,6 +111,19 @@ public sealed class PixelBudsHeadset : IHeadset
             var (channel, software) = await ResolveChannelAsync(link.Client).ConfigureAwait(false);
             link.Channel = channel;
             Update(state => state with { Firmware = software.Firmware?.Left?.VersionString ?? "" });
+
+            // Leftovers: the buds keep a dropped link's streams and play their mode-change tone
+            // once more for each, so cancel them before opening new ones
+            StreamCall[] leftover;
+            lock (_gate)
+            {
+                leftover = [.. _leftoverStreams];
+                _leftoverStreams.Clear();
+            }
+            foreach (var stream in leftover)
+            {
+                await link.Client.CancelLeftoverAsync(stream).ConfigureAwait(false);
+            }
 
             // Subscriptions: battery for both buds, and changes made on the buds. Both stay open
             // until the link closes, which cancels them on the buds (see MaestroClient.DisposeAsync).
@@ -430,10 +446,11 @@ public sealed class PixelBudsHeadset : IHeadset
         lock (_gate)
         {
             // Only the current link's close counts; an old one closing after a reconnect doesn't
-            if (_link?.Client != sender)
+            if (sender is not MaestroClient client || _link?.Client != client)
             {
                 return;
             }
+            _leftoverStreams.AddRange(client.DroppedStreams);
         }
         Disconnect();
         Disconnected?.Invoke(this, EventArgs.Empty);

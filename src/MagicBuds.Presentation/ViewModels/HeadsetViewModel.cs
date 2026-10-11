@@ -492,21 +492,36 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
 
     private void ApplySnapshot(HeadsetSnapshot snapshot)
     {
-        // The case only reports while a bud sits in it; otherwise show the last level it
-        // reported, even from an earlier run, like the phone does
-        if (snapshot.Battery.Case is { } caseLevel)
+        // Nothing reports while disconnected, and the case only while a bud sits in it; show the
+        // last level each part reported then, even from an earlier run, like the phone does
+        var battery = snapshot.Battery;
+        snapshot = snapshot with
         {
-            _settings.SetLastCaseBattery(Id, caseLevel);
-        }
-        else
-        {
-            snapshot = snapshot with { Battery = snapshot.Battery with { Case = _settings.GetLastCaseBattery(Id) } };
-        }
+            Battery = battery with
+            {
+                Left  = Remember("Left", battery.Left),
+                Right = Remember("Right", battery.Right),
+                Case  = Remember("Case", battery.Case),
+            },
+        };
 
         // Battery always follows the buds; everything else waits for commands in flight
         var holding = _equalizerThrottler.HasPending || Volatile.Read(ref _commandsInFlight) > 0;
         Show(holding ? _shown with { Battery = snapshot.Battery, Firmware = snapshot.Firmware } : snapshot);
-        _lowBattery.Update(Id, DeviceName, snapshot.Battery);
+        // Only what the buds just reported, so a remembered level never raises a low-battery alert
+        _lowBattery.Update(Id, DeviceName, battery);
+    }
+
+    // Saves a reported level, or fills in the last one saved when there's none
+    private int? Remember(string part, int? level)
+    {
+        if (level is { } reported)
+        {
+            _settings.SetLastBattery(Id, part, reported);
+            return reported;
+        }
+
+        return _settings.GetLastBattery(Id, part);
     }
 
     private void Show(HeadsetSnapshot snapshot)

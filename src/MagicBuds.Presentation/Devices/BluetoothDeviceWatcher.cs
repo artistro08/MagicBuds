@@ -11,6 +11,7 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
 {
     private const string IsConnectedProperty = "System.Devices.Aep.IsConnected";
     private const string AddressProperty = "System.Devices.Aep.DeviceAddress";
+    private const string NameProperty = "System.ItemNameDisplay";
 
     private readonly Lock _gate = new();
     private readonly Dictionary<string, BluetoothDeviceInfo> _devices = [];
@@ -29,7 +30,7 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
 
         _watcher = DeviceInformation.CreateWatcher(
             BluetoothDevice.GetDeviceSelectorFromPairingState(true),
-            [IsConnectedProperty, AddressProperty],
+            [IsConnectedProperty, AddressProperty, NameProperty],
             DeviceInformationKind.AssociationEndpoint);
         _watcher.Added += OnAdded;
         _watcher.Updated += OnUpdated;
@@ -89,8 +90,14 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
             if (update.Properties.ContainsKey(IsConnectedProperty))
             {
                 device = device with { IsConnected = ReadBool(update.Properties, IsConnectedProperty) };
-                _devices[update.Id] = device;
             }
+
+            // Renamed in Windows' Bluetooth settings
+            if (ReadString(update.Properties, NameProperty) is { Length: > 0 } name)
+            {
+                device = device with { Name = name };
+            }
+            _devices[update.Id] = device;
         }
         DeviceChanged?.Invoke(this, device);
     }

@@ -76,6 +76,23 @@ public sealed class HeadsetManagerTests
     }
 
     [TestMethod]
+    public async Task RenamingTheBudsShowsTheNewNameWithoutReconnecting()
+    {
+        _source.Report(Xm6);
+        var headset = _manager.Headsets.Single();
+        Assert.IsTrue(await TestWait.UntilAsync(() => headset.ConnectionState == HeadsetConnectionState.Connected));
+        var changes = 0;
+        _manager.ConnectionStateChanged += (_, _) => changes++;
+
+        _source.Report(Xm6 with { Name = "Office Buds" });
+
+        Assert.AreEqual("Office Buds", headset.Name);
+        Assert.AreEqual(1, changes);
+        Assert.AreEqual(HeadsetConnectionState.Connected, headset.ConnectionState);
+        Assert.AreEqual(1, _created["Pixel Buds Pro 2"].ConnectAttempts);
+    }
+
+    [TestMethod]
     public void OtherBrandsAreIgnored()
     {
         _source.Report(new BluetoothDeviceInfo("device-buds", "Galaxy Buds2", "00:11:22:33:44:55", true));

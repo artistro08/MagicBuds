@@ -4,10 +4,12 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MagicBuds.App.Views">
 
-    <!-- Equalizer Band: the gain on top, an upright slider, and the band's name under it -->
-    <StackPanel HorizontalAlignment="Center" Spacing="8">
+    <!-- Equalizer Band: the gain on top, an upright slider, and the band's name under it. The
+         panel fills its column, so a wider gain like "-5.5 dB" can't shift the slider -->
+    <StackPanel HorizontalAlignment="Stretch" Spacing="8">
         <TextBlock
             HorizontalAlignment="Center"
+            TextAlignment="Center"
             Style="{StaticResource SecondaryTextStyle}"
             Text="{x:Bind local:EqualizerBand.FormatGain(Value), Mode=OneWay}" />
         <Slider

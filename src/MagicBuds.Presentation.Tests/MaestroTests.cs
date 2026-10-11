@@ -166,6 +166,30 @@ public sealed class MaestroTests
     }
 
     [TestMethod]
+    public async Task DroppedLinkRemembersItsOpenStreams()
+    {
+        using var fromClient = new AnonymousPipeServerStream(PipeDirection.In);
+        using var toBuds = new AnonymousPipeClientStream(PipeDirection.Out, fromClient.ClientSafePipeHandle);
+        var budsSide = new AnonymousPipeServerStream(PipeDirection.Out);
+        using var fromBuds = new AnonymousPipeClientStream(PipeDirection.In, budsSide.ClientSafePipeHandle);
+        var client = new MaestroClient(fromBuds, toBuds, NullLogger.Instance);
+        var closed = new TaskCompletionSource();
+        client.Closed += (_, _) => closed.TrySetResult();
+
+        await client.SubscribeAsync(MaestroClient.RightChannelA, "SubscribeToSettingsChanges", _ => { });
+        var request = new byte[1024];
+        var count = await fromClient.ReadAsync(request);
+        var callId = new HdlcFrame.Reader().Push(request.AsSpan(0, count)).Select(frame => RpcPacket.Parser.ParseFrom(frame.Data)).Single().CallId;
+
+        // The buds hang up
+        budsSide.Dispose();
+        await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Assert.AreEqual(new StreamCall(MaestroClient.RightChannelA, "SubscribeToSettingsChanges", callId), client.DroppedStreams.Single());
+        await client.DisposeAsync();
+    }
+
+    [TestMethod]
     public void UnknownNoiseModeShowsNoMode()
     {
         // Real buds out of the ears answer 22 02 68 00
