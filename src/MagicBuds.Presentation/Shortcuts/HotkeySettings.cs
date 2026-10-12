@@ -6,7 +6,7 @@
 // By way of Leaf Calendar, whose changes are kept: no JSON or conflict properties (the app stores Hotkey text and
 // checks conflicts itself), IsValid also requires Ctrl, Alt, or Win and a key Hotkey accepts (Shift+J is a capital J),
 // Windows' own Win+L and Alt+F4 are refused, key names come from Hotkey's table instead of the keyboard layout, and
-// ToString joins with "+". MagicBuds change: F12 is allowed (see Hotkey).
+// ToString joins with "+". MagicBuds changes: F12, Space and Delete are allowed (see Hotkey).
 
 using System.Globalization;
 
@@ -112,7 +112,7 @@ public sealed record HotkeySettings
         return shortcutList;
     }
 
-    /// <summary>True for a combination the app can register: Ctrl, Alt, or Win (Shift optional) with a letter, a number, or F1–F24, and not Win+L or Alt+F4.</summary>
+    /// <summary>True for a combination the app can register: Ctrl, Alt, or Win (Shift optional) with a letter, a number, F1–F24, Space, or Delete, and not Win+L or Alt+F4.</summary>
     public bool IsValid()
     {
         if (IsAccessibleShortcut())
@@ -150,7 +150,7 @@ public sealed record HotkeySettings
             return $"Invalid shortcut. Windows keeps {ToString()} for itself.";
         }
 
-        return "Invalid shortcut. It must end with a letter, a number, or an F key.";
+        return "Invalid shortcut. It must end with a letter, a number, an F key, Space, or Delete.";
     }
 
     /// <summary>No modifier and no key.</summary>
@@ -203,7 +203,6 @@ public sealed record HotkeySettings
         VkTab => "Tab",
         0x0D => "Enter",
         0x1B => "Esc",
-        0x20 => "Space",
         0x21 => "Page Up",
         0x22 => "Page Down",
         0x23 => "End",
@@ -213,7 +212,6 @@ public sealed record HotkeySettings
         0x27 => "Right",
         0x28 => "Down",
         0x2D => "Insert",
-        0x2E => "Delete",
         _ => string.Create(CultureInfo.InvariantCulture, $"Key {key:X2}"),
     };
 }

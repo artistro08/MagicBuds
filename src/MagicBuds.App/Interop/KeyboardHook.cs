@@ -17,7 +17,7 @@ using Windows.Win32.UI.WindowsAndMessaging;
 namespace MagicBuds.App.Interop;
 
 /// <summary>A key event from the low-level hook: the message, the virtual-key code, and the sender's extra info.</summary>
-internal readonly record struct KeyboardEvent(uint Message, int Key, nuint ExtraInfo);
+internal readonly record struct KeyboardEvent(uint Message, int Key, nuint ExtraInfo, bool Injected);
 
 /// <summary>
 /// A low-level keyboard hook (<c>WH_KEYBOARD_LL</c>) for the shortcut picker: while <c>isActive</c> says so, every key
@@ -85,7 +85,7 @@ internal static unsafe class KeyboardHook
             if (nCode == (int)PInvoke.HC_ACTION && s_callback is { } callback && s_isActive?.Invoke() == true)
             {
                 var info = (KBDLLHOOKSTRUCT*)lParam.Value;
-                var ev = new KeyboardEvent((uint)wParam.Value, (int)info->vkCode, info->dwExtraInfo);
+                var ev = new KeyboardEvent((uint)wParam.Value, (int)info->vkCode, info->dwExtraInfo, info->flags.HasFlag(KBDLLHOOKSTRUCT_FLAGS.LLKHF_INJECTED));
 
                 // Ignore the keyboard hook if the FilterKeyboardEvent returns false.
                 if (s_filter is null || s_filter(ev))
@@ -115,6 +115,7 @@ internal sealed class HotkeySettingsControlHook : IDisposable
     private const int WmKeyUp = 0x101;
     private const int WmSysKeyDown = 0x0104;
     private const int WmSysKeyUp = 0x0105;
+    private const int VkEscape = 0x1B;
 
     private readonly Action<int> _keyDown;
     private readonly Action<int> _keyUp;
@@ -140,6 +141,13 @@ internal sealed class HotkeySettingsControlHook : IDisposable
 
     private void HotkeySettingsHookCallback(KeyboardEvent ev)
     {
+        // A sent Esc isn't a real press: Raycast's Hyper key sends one when it's let go, which would clear the
+        // shortcut just picked. It's still swallowed, so it doesn't close the dialog either.
+        if (ev.Key == VkEscape && ev.Injected)
+        {
+            return;
+        }
+
         switch (ev.Message)
         {
             case WmKeyDown:

@@ -351,9 +351,10 @@ public sealed class HeadsetManager : IDisposable
     private async Task ConnectLoopAsync(ManagedHeadset headset, int delayIndex, TimeSpan settle, Task? previousLoop, CancellationToken cancellationToken)
     {
         // Never run two connects on one headset: let a cancelled loop's in-flight connect finish first.
+        // A loop that faulted must not stop this one from starting.
         if (previousLoop is not null)
         {
-            await previousLoop.ConfigureAwait(false);
+            await previousLoop.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
 
         try

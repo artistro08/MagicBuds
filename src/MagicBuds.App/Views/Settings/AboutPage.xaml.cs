@@ -1,7 +1,7 @@
 namespace MagicBuds.App.Views.Settings;
 
 /// <summary>
-/// App name, installed version and credits.
+/// App name, installed version, author, repository and credits.
 /// </summary>
 public sealed partial class AboutPage : SettingsPageBase
 {

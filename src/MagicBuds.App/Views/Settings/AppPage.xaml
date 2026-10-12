@@ -5,8 +5,8 @@
     xmlns:local="using:MagicBuds.App.Views.Settings"
     xmlns:vm="using:MagicBuds.Presentation.ViewModels">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="General" />
 
             <!-- Launch At Sign-In -->
@@ -81,5 +81,5 @@
                 </StackPanel>
             </Border>
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>

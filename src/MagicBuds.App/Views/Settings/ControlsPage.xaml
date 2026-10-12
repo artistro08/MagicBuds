@@ -5,8 +5,8 @@
     xmlns:local="using:MagicBuds.App.Views.Settings"
     xmlns:views="using:MagicBuds.App.Views">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="Controls and gestures" />
 
             <!-- Disconnected: settings can't be read or changed without the control link -->
@@ -123,5 +123,5 @@
                 </StackPanel>
             </ContentControl>
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>

@@ -108,6 +108,25 @@
         <Setter Property="MinHeight" Value="68" />
     </Style>
 
+    <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid
+         fills the width so the centering uses the content's real width; centered straight in the
+         ScrollViewer, it's pushed off the right edge on wide windows. The scrollbar stays on the
+         window edge. -->
+    <Style x:Key="SettingsPageStyle" TargetType="ContentControl">
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <ScrollViewer>
+                        <Grid Padding="36,24">
+                            <ContentPresenter MaxWidth="900" HorizontalAlignment="Stretch" />
+                        </Grid>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="SettingsPageTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleTextBlockStyle}">
         <Setter Property="Margin" Value="0,0,0,16" />
     </Style>

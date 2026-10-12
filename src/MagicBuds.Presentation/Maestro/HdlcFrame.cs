@@ -109,6 +109,9 @@ internal sealed record HdlcFrame(uint Address, byte Control, byte[] Data)
     /// </summary>
     internal sealed class Reader
     {
+        // Far above any Maestro message
+        private const int MaxFrameBytes = 64 * 1024;
+
         private readonly List<byte> _content = [];
         private bool _inFrame;
         private bool _escaped;
@@ -144,6 +147,13 @@ internal sealed record HdlcFrame(uint Address, byte Control, byte[] Data)
                 }
                 _content.Add(_escaped ? (byte)(value ^ 0x20) : value);
                 _escaped = false;
+
+                // A garbled stream that never sends the closing flag: drop it and wait for the next frame
+                if (_content.Count > MaxFrameBytes)
+                {
+                    _content.Clear();
+                    _inFrame = false;
+                }
             }
             return frames;
         }

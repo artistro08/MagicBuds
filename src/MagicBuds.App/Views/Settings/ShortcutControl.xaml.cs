@@ -116,6 +116,12 @@ public sealed partial class ShortcutControl : UserControl, IDisposable
         get => _hasConflict;
         set
         {
+            // Only redraw on a change: new key caps fade in, so redrawing the same ones on every page refresh flashes
+            if (_hasConflict == value)
+            {
+                return;
+            }
+
             _hasConflict = value;
             SetKeys();
         }
@@ -225,6 +231,14 @@ public sealed partial class ShortcutControl : UserControl, IDisposable
     {
         // A keyboard event sent with this value in the extra Information field should be ignored by the hook so that it can be captured by the system instead.
         if (extraInfo == _ignoreKeyEventFlag)
+        {
+            return false;
+        }
+
+        // Hyper Key: Raycast's Hyper key is Caps Lock, which Raycast turns into Ctrl+Alt+Win, with or without Shift as it's
+        // set up. Letting Caps Lock through to Raycast means the modifiers it sends come back here, so the shortcut
+        // records exactly the combination it will fire with.
+        if ((VirtualKey)key == VirtualKey.CapitalLock)
         {
             return false;
         }

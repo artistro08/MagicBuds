@@ -11,7 +11,7 @@ public sealed class ShortcutTests
     public void EveryDefaultParsesAndMapsToItsMode()
     {
         CollectionAssert.AreEqual(
-            new[] { "Win+F10", "Win+F11", "Win+F12", "Win+F6" },
+            new[] { "Win+F10", "Win+F11", "Win+F12", "Win+F6", "Win+F9" },
             ShortcutActions.All.Select(ShortcutActions.DefaultFor).ToArray());
 
         foreach (var action in ShortcutActions.All)
@@ -31,6 +31,18 @@ public sealed class ShortcutTests
         Assert.AreEqual(0x7B, hotkey.Key);
         Assert.IsTrue(HotkeySettings.FromHotkey(hotkey).IsValid());
         Assert.IsFalse(Hotkey.TryParse("F12", out _));
+    }
+
+    [TestMethod]
+    public void HyperKeyWithSpaceOrDeleteIsAllowed()
+    {
+        var space = new HotkeySettings(win: true, ctrl: true, alt: true, shift: true, code: 0x20);
+        var delete = new HotkeySettings(win: true, ctrl: true, alt: false, shift: false, code: 0x2E);
+
+        Assert.AreEqual("Ctrl+Alt+Shift+Win+Space", space.ToHotkey()?.ToString());
+        Assert.AreEqual("Ctrl+Win+Delete", delete.ToHotkey()?.ToString());
+        Assert.IsTrue(Hotkey.TryParse("Ctrl+Alt+Shift+Win+Space", out var parsed));
+        Assert.AreEqual(0x20, parsed.Key);
     }
 
     [TestMethod]

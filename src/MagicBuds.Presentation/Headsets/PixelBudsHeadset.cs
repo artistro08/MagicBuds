@@ -452,13 +452,17 @@ public sealed class PixelBudsHeadset : IHeadset
 
         public uint Channel { get; set; }
 
+        private Task? _closing;
+
+        // Closes once: a failed connect closes the link both through Disconnect and directly, and
+        // a second close would cut off the first one's stream cancels on the buds
         public Task Close(EventHandler onClosed)
         {
             if (Client is not null)
             {
                 Client.Closed -= onClosed;
             }
-            return CloseAsync();
+            return _closing ??= CloseAsync();
         }
 
         // The client cancels its streams on the buds first; the socket closes after, or after

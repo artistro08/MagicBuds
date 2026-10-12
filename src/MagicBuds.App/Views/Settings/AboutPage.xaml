@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MagicBuds.App.Views.Settings">
 
-    <ScrollViewer>
-        <StackPanel MaxWidth="900" HorizontalAlignment="Stretch" Spacing="8">
+    <ContentControl Style="{StaticResource SettingsPageStyle}">
+        <StackPanel Spacing="8">
             <TextBlock Style="{StaticResource SettingsPageTitleStyle}" Text="About" />
 
             <!-- App -->
@@ -18,7 +18,26 @@
                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                         <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="MagicBuds" />
                         <TextBlock Style="{StaticResource SecondaryTextStyle}" Text="{x:Bind local:AboutPage.VersionText}" />
+                        <TextBlock Style="{StaticResource SecondaryTextStyle}">
+                            <Run Text="By " /><Hyperlink NavigateUri="https://github.com/artistro08">
+                                artistro08
+                            </Hyperlink>
+                        </TextBlock>
                     </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Repository -->
+            <Border Style="{StaticResource SettingsCardStyle}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        Text="MagicBuds source code, releases and issues."
+                        TextWrapping="Wrap" />
+                    <HyperlinkButton
+                        Grid.Column="1"
+                        Content="View on GitHub"
+                        NavigateUri="https://github.com/artistro08/MagicBuds" />
                 </Grid>
             </Border>
 
@@ -36,5 +55,5 @@
                 </Grid>
             </Border>
         </StackPanel>
-    </ScrollViewer>
+    </ContentControl>
 </local:SettingsPageBase>

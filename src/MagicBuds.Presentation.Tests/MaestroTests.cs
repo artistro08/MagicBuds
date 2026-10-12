@@ -81,6 +81,18 @@ public sealed class MaestroTests
     }
 
     [TestMethod]
+    public void ReaderRecoversFromAFrameThatNeverEnds()
+    {
+        var reader = new HdlcFrame.Reader();
+        var garbage = new byte[100_000];
+        garbage[0] = 0x7E;
+        Array.Fill(garbage, (byte)0x11, 1, garbage.Length - 1);
+
+        Assert.AreEqual(0, reader.Push(garbage).Count);
+        Assert.AreEqual(1, reader.Push(Convert.FromHexString(NoiseCancellationFrame)).Count);
+    }
+
+    [TestMethod]
     public void SettingsReplyUpdatesTheSnapshot()
     {
         var state = HeadsetSnapshot.Empty;

@@ -73,6 +73,12 @@ public sealed class JsonFileSettingsStore : ISettingsStore
     {
         lock (_gate)
         {
+            // Battery updates save the same levels over and over; only a change hits the disk
+            if (_values.GetValueOrDefault(key) == value)
+            {
+                return;
+            }
+
             if (value is null)
             {
                 _values.Remove(key);
@@ -82,10 +88,17 @@ public sealed class JsonFileSettingsStore : ISettingsStore
                 _values[key] = value;
             }
 
-            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            var temporary = _path + ".tmp";
-            File.WriteAllText(temporary, JsonSerializer.Serialize(_values));
-            File.Move(temporary, _path, overwrite: true);
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+                var temporary = _path + ".tmp";
+                File.WriteAllText(temporary, JsonSerializer.Serialize(_values));
+                File.Move(temporary, _path, overwrite: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // File locked (antivirus) or disk full: keep the value in memory, the next change saves it
+            }
         }
     }
 
@@ -117,6 +130,11 @@ public sealed class LocalSettingsStore : ISettingsStore
 
     public void SetString(string key, string? value)
     {
+        // Battery updates save the same levels over and over; only a change is written
+        if (GetString(key) == value)
+        {
+            return;
+        }
         if (value is null)
         {
             _values.Remove(key);

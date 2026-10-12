@@ -13,6 +13,8 @@
     <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
     <!-- The keyboard hook's procedure is an unmanaged function pointer -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Tray app with a small heap: no background GC thread and its reserved memory -->
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
 
     <!-- Exe icon and version, which the classic (MSI) install shows; the MSIX takes both from
          Package.appxmanifest. Build-Release.ps1 passes the release version. -->

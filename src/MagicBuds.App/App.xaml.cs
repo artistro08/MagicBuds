@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using MagicBuds.App.Interop;
@@ -34,6 +35,7 @@ public partial class App : Application, IDisposable
     private GlobalShortcuts? _shortcuts;
     private EventWaitHandle? _quitRequest;
     private RegisteredWaitHandle? _quitWait;
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _trimTimer;
 
     public App()
     {
@@ -110,16 +112,17 @@ public partial class App : Application, IDisposable
         _flyoutWindow.CloseRequested += (_, _) => _flyoutWindow.HideFlyout();
 
         _trayIcon = new TrayIcon("MagicBuds");
-        _trayMenu = new TrayMenuWindow();
         _trayIcon.Invoked += (_, _) => _flyoutWindow.Toggle(_trayIcon.GetIconRect());
-        _trayIcon.ContextMenuRequested += (_, point) =>
+        _trayIcon.ContextMenuRequested += (_, point) => ShowTrayMenu(point.X, point.Y);
+
+        // Memory Trim: once the flyout is hidden, hand what it used back to Windows
+        _flyoutWindow.AppWindow.Changed += (sender, e) =>
         {
-            _flyoutWindow.HideFlyout();
-            var (x, y, edge, _, _) = ScreenGeometry.GetMenuAnchor(point.X, point.Y);
-            _trayMenu.ShowAt(x, y, edge);
+            if (e.DidVisibilityChange && !sender.IsVisible)
+            {
+                ScheduleMemoryTrim();
+            }
         };
-        _trayMenu.SettingsRequested += (_, _) => ShowSettings();
-        _trayMenu.QuitRequested += (_, _) => Quit();
 
         // Notification Clicks open the flyout on the buds the notification was about
         _notifications.HeadsetClicked += (_, headsetId) => _flyoutWindow.DispatcherQueue.TryEnqueue(() =>
@@ -146,6 +149,9 @@ public partial class App : Application, IDisposable
         _manager.Start();
         WatchForQuitRequests();
         AppLog.Started(_logger, AppIdentity.Version);
+
+        // Startup itself leaves a lot behind that the idle tray app never needs
+        ScheduleMemoryTrim();
     }
 
     // MagicBuds.exe --quit signals this event (see Program); quit like the tray menu does
@@ -164,13 +170,73 @@ public partial class App : Application, IDisposable
     // The buds the flyout shows, or else the first connected ones
     private void OnShortcutPressed(ShortcutAction action)
     {
+        var name = action.ToString();
+
+        // Open The Flyout: by the tray icon, or with Windhawk's tray on every taskbar, on the screen the mouse is on
+        if (action == ShortcutAction.OpenFlyout)
+        {
+            AppLog.ShortcutPressed(_logger, name, true);
+            if (_flyoutWindow is not null && _trayIcon is not null)
+            {
+                _flyoutWindow.Toggle(Windhawk.HasTrayOnEveryTaskbar() ? null : _trayIcon.GetIconRect());
+            }
+            return;
+        }
+
         var connected = _flyout?.ConnectedHeadsets ?? [];
         var headset = _flyout?.CurrentHeadset is { IsConnected: true } current
             ? current
             : connected.Count > 0 ? connected[0] : null;
-        var name = action.ToString();
         AppLog.ShortcutPressed(_logger, name, headset is not null);
         headset?.SelectNoiseMode(ShortcutActions.NoiseModeFor(action));
+    }
+
+    // The right-click menu's window is made on first use, since most sessions never open it
+    private void ShowTrayMenu(int pointX, int pointY)
+    {
+        _flyoutWindow?.HideFlyout();
+        if (_trayMenu is null)
+        {
+            _trayMenu = new TrayMenuWindow();
+            _trayMenu.ApplyTheme(_settings?.Theme ?? AppTheme.System);
+            _trayMenu.SettingsRequested += (_, _) => ShowSettings();
+            _trayMenu.QuitRequested += (_, _) => Quit();
+        }
+
+        var (x, y, edge, _, _) = ScreenGeometry.GetMenuAnchor(pointX, pointY);
+        _trayMenu.ShowAt(x, y, edge);
+    }
+
+    // Waits a few seconds so a quick reopen doesn't pay for it, and so closed windows finish tearing down
+    private void ScheduleMemoryTrim()
+    {
+        if (_trimTimer is null)
+        {
+            _trimTimer = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread().CreateTimer();
+            _trimTimer.Interval = TimeSpan.FromSeconds(5);
+            _trimTimer.IsRepeating = false;
+            _trimTimer.Tick += (_, _) => TrimMemory();
+        }
+        _trimTimer.Stop();
+        _trimTimer.Start();
+    }
+
+    // Only while nothing is on screen: a full compacting collection, then pages nothing is
+    // using leave the working set (Windows pages them back in if they're needed again)
+    private void TrimMemory()
+    {
+        if (_flyoutWindow?.AppWindow.IsVisible == true || _settingsWindow is not null)
+        {
+            return;
+        }
+
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+
+        // Finalizers release the WinRT objects behind closed windows; collect what they let go
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        _ = NativeMethods.SetProcessWorkingSetSize(NativeMethods.GetCurrentProcess(), -1, -1);
     }
 
     private void ShowTrayTooltip()
@@ -198,7 +264,11 @@ public partial class App : Application, IDisposable
         {
             _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts!, _settings));
             _settingsWindow.ApplyTheme(_settings.Theme);
-            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.Closed += (_, _) =>
+            {
+                _settingsWindow = null;
+                ScheduleMemoryTrim();
+            };
         }
         if (page is not null)
         {
@@ -229,6 +299,7 @@ public partial class App : Application, IDisposable
 
     public void Dispose()
     {
+        _trimTimer?.Stop();
         _shortcuts?.Suspend();
         _trayIcon?.Dispose();
         _trayMenu?.Close();

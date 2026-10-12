@@ -1,5 +1,6 @@
-// From Leaf Calendar (src/LeafCalendar.Core/Tray/Hotkey.cs). MagicBuds change: F12 is allowed, since its noise mode
-// shortcuts default to Win+F12 (Windows only claims F12 while a debugger is attached).
+// From Leaf Calendar (src/LeafCalendar.Core/Tray/Hotkey.cs). MagicBuds changes: F12 is allowed, since its noise mode
+// shortcuts default to Win+F12 (Windows only claims F12 while a debugger is attached), and so are Space and Delete,
+// which Hyper key shortcuts (Raycast) often use.
 
 using System.Globalization;
 
@@ -26,7 +27,8 @@ public enum HotkeyModifiers
 }
 
 /// <summary>
-/// A global shortcut such as Ctrl+Alt+J: modifiers plus one key, a Win32 virtual-key code for A–Z, 0–9, or F1–F24.
+/// A global shortcut such as Ctrl+Alt+J: modifiers plus one key, a Win32 virtual-key code for A–Z, 0–9, F1–F24, Space,
+/// or Delete.
 /// </summary>
 /// <remarks>
 /// At least one of Ctrl, Alt, or Win is required, so a shortcut never swallows plain typing (Shift+J is a capital J).
@@ -124,6 +126,8 @@ public readonly record struct Hotkey(HotkeyModifiers Modifiers, int Key)
     // A–Z and 0–9 are their own virtual-key codes; F1–F24 are 0x70–0x87
     internal static string? KeyName(int key) => key switch
     {
+        0x20 => "Space",
+        0x2E => "Delete",
         >= 0x41 and <= 0x5A => new string((char)key, 1),
         >= 0x30 and <= 0x39 => new string((char)key, 1),
         >= 0x70 and <= 0x87 => string.Create(CultureInfo.InvariantCulture, $"F{key - 0x6F}"),
@@ -132,6 +136,12 @@ public readonly record struct Hotkey(HotkeyModifiers Modifiers, int Key)
 
     private static int? KeyCode(string name)
     {
+        // Space And Delete (the name is upper-cased)
+        if (name is "SPACE" or "DELETE" or "DEL")
+        {
+            return name == "SPACE" ? 0x20 : 0x2E;
+        }
+
         if (name.Length == 1 && (char.IsAsciiLetterUpper(name[0]) || char.IsAsciiDigit(name[0])))
         {
             return name[0];

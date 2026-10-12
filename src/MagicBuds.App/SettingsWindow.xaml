@@ -68,7 +68,8 @@
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
-            <Frame x:Name="ContentFrame" Padding="36,24" />
+            <!-- Each page pads inside its own scroll area, so the scrollbar sits on the window edge -->
+            <Frame x:Name="ContentFrame" />
         </NavigationView>
         <!-- /Navigation -->
     </Grid>
