@@ -10,6 +10,12 @@
     A Windows 11 tray app that controls Pixel Buds Pro 2 from a native WinUI flyout.
 </p>
 
+<p align="center">
+    <a href="https://apps.microsoft.com/detail/9NFM4T54XBSS?mode=direct">
+        <img src="https://get.microsoft.com/images/en-us%20dark.svg" width="200" alt="Get it from Microsoft">
+    </a>
+</p>
+
 ## Introduction
 
 MagicBuds puts the controls from [mypixelbuds.google.com](https://mypixelbuds.google.com) in your tray. It talks to the buds over Bluetooth directly, so you don't need Chrome open.
@@ -87,4 +93,4 @@ MIT, see [LICENSE](LICENSE). Notices for the work it builds on are in [LICENSE-T
 
 ## Disclaimer
 
-MagicBuds is an independent, unofficial app. It's in no way affiliated with, associated with, authorized by, or endorsed by Google LLC. Google, Pixel and Pixel Buds are trademarks of Google LLC, used here only to say which earbuds the app works with.
+MagicBuds is an independent app and is not made, endorsed, or supported by Google. Pixel, Pixel Buds, and Google are trademarks of Google LLC. Product images of Pixel Buds are used only to show which earbuds are connected, and all rights to them belong to their owners.
