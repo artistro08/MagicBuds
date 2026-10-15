@@ -99,6 +99,40 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool HideTray
+    {
+        get => _settings.HideTray;
+        set
+        {
+            if (value == _settings.HideTray)
+            {
+                return;
+            }
+            _settings.HideTray = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanHideTrayWhileDisconnected));
+        }
+    }
+
+    /// <summary>
+    /// "Until my buds connect" only matters while the icon isn't hidden for good.
+    /// </summary>
+    public bool CanHideTrayWhileDisconnected => !HideTray;
+
+    public bool HideTrayWhileDisconnected
+    {
+        get => _settings.HideTrayWhileDisconnected;
+        set
+        {
+            if (value == _settings.HideTrayWhileDisconnected)
+            {
+                return;
+            }
+            _settings.HideTrayWhileDisconnected = value;
+            OnPropertyChanged();
+        }
+    }
+
     public static IReadOnlyList<string> ThemeOptions { get; } = ["Use system setting", "Light", "Dark"];
 
     public int ThemeIndex

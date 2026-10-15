@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:MagicBuds.App.Views.Settings"
+    xmlns:views="using:MagicBuds.App.Views"
     xmlns:vm="using:MagicBuds.Presentation.ViewModels">
 
     <ContentControl Style="{StaticResource SettingsPageStyle}">
@@ -23,6 +24,30 @@
                         Style="{StaticResource CardToggleSwitchStyle}" />
                 </Grid>
             </Border>
+
+            <!-- Tray Icon: the main switch in the header, "until my buds connect" inside -->
+            <Expander Style="{StaticResource SettingsExpanderStyle}">
+                <!-- No hover box behind the arrow -->
+                <Expander.Resources>
+                    <SolidColorBrush x:Key="ExpanderChevronPointerOverBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronPressedBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronBorderPointerOverBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ExpanderChevronBorderPressedBrush" Color="Transparent" />
+                </Expander.Resources>
+                <Expander.Header>
+                    <views:SettingToggleRow
+                        Margin="0,16"
+                        IsOn="{x:Bind ViewModel.HideTray, Mode=TwoWay}"
+                        Subtitle="MagicBuds keeps running in the background. Open it from the Start menu to get to Settings."
+                        Title="Hide the tray icon" />
+                </Expander.Header>
+                <views:SettingToggleRow
+                    IsEnabled="{x:Bind ViewModel.CanHideTrayWhileDisconnected, Mode=OneWay}"
+                    IsOn="{x:Bind ViewModel.HideTrayWhileDisconnected, Mode=TwoWay}"
+                    Subtitle="Shows it again while your buds are connected."
+                    Title="Hide the tray icon until my buds connect" />
+            </Expander>
+            <!-- /Tray Icon -->
 
             <!-- Low Battery -->
             <Border Style="{StaticResource SettingsCardStyle}">

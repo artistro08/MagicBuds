@@ -22,6 +22,8 @@ public sealed class AppSettings
     private const string LowBatteryNotificationsKey = "LowBatteryNotifications";
     private const string ThemeKey = "Theme";
     private const string DebugLoggingKey = "DebugLogging";
+    private const string HideTrayKey = "HideTray";
+    private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
     private const string AutoConnectKeyPrefix = "AutoConnect.";
     private const string KnownHeadsetKeyPrefix = "KnownHeadset.";
     private const string ShortcutKeyPrefix = "Shortcut.";
@@ -59,6 +61,25 @@ public sealed class AppSettings
     {
         get => GetBool(DebugLoggingKey, false);
         set => SetBool(DebugLoggingKey, value);
+    }
+
+    /// <summary>
+    /// Keeps the tray icon hidden all the time. The app keeps running.
+    /// </summary>
+    public bool HideTray
+    {
+        get => GetBool(HideTrayKey, false);
+        set => SetBool(HideTrayKey, value);
+    }
+
+    /// <summary>
+    /// Keeps the tray icon hidden until Windows connects a pair of buds. The app keeps running
+    /// either way.
+    /// </summary>
+    public bool HideTrayWhileDisconnected
+    {
+        get => GetBool(HideTrayWhileDisconnectedKey, false);
+        set => SetBool(HideTrayWhileDisconnectedKey, value);
     }
 
     /// <summary>

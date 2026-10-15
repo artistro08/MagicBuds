@@ -39,6 +39,7 @@ internal sealed class TrayIcon : IDisposable
     private readonly IntPtr _hwnd;
     private readonly uint _taskbarCreatedMessage;
     private IntPtr _icon;
+    private bool _visible;
     private bool _disposed;
 
     public TrayIcon(string tooltip)
@@ -98,6 +99,30 @@ internal sealed class TrayIcon : IDisposable
     public IntPtr Handle => _hwnd;
 
     public void Show()
+    {
+        if (_visible)
+        {
+            return;
+        }
+        _visible = true;
+        Add();
+    }
+
+    /// <summary>
+    /// Takes the icon off the tray. Its window stays, so global shortcuts keep working.
+    /// </summary>
+    public void Hide()
+    {
+        if (!_visible)
+        {
+            return;
+        }
+        _visible = false;
+        var data = CreateData(0);
+        NativeMethods.Shell_NotifyIconW(NativeMethods.NIM_DELETE, ref data);
+    }
+
+    private void Add()
     {
         LoadIcon();
 
@@ -211,7 +236,10 @@ internal sealed class TrayIcon : IDisposable
 
         if (message == _taskbarCreatedMessage)
         {
-            Show();
+            if (_visible)
+            {
+                Add();
+            }
             return IntPtr.Zero;
         }
 

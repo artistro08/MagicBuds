@@ -21,6 +21,11 @@ public static class Program
     /// </summary>
     public const string QuitEventName = "MagicBuds.Quit";
 
+    /// <summary>
+    /// Signaled by a second launch; the running copy opens Settings.
+    /// </summary>
+    public const string ShowEventName = "MagicBuds.Show";
+
     [STAThread]
     private static void Main(string[] args)
     {
@@ -37,10 +42,17 @@ public static class Program
             return;
         }
 
-        // A second launch (startup task plus a manual start) exits right away.
+        // A second launch exits right away. Opening MagicBuds by hand also asks the running copy
+        // to show Settings, since its tray icon may be hidden; the startup task doesn't.
         var instance = AppInstance.FindOrRegisterForKey(InstanceKey);
         if (!instance.IsCurrent)
         {
+            if (AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.Launch
+                && EventWaitHandle.TryOpenExisting(ShowEventName, out var show))
+            {
+                show.Set();
+                show.Dispose();
+            }
             return;
         }
 

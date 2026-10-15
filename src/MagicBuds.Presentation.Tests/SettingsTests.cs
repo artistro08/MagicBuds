@@ -15,6 +15,8 @@ public sealed class AppSettingsTests
         Assert.IsTrue(settings.LowBatteryNotifications);
         Assert.AreEqual(AppTheme.System, settings.Theme);
         Assert.IsFalse(settings.DebugLogging);
+        Assert.IsFalse(settings.HideTray);
+        Assert.IsFalse(settings.HideTrayWhileDisconnected);
         Assert.IsTrue(settings.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
     }
 
@@ -28,6 +30,8 @@ public sealed class AppSettingsTests
             LowBatteryNotifications = false,
             Theme = AppTheme.Dark,
             DebugLogging = true,
+            HideTray = true,
+            HideTrayWhileDisconnected = true,
         };
         settings.SetAutoConnectEnabled("AC:80:0A:12:34:56", false);
 
@@ -36,6 +40,8 @@ public sealed class AppSettingsTests
         Assert.IsFalse(reloaded.LowBatteryNotifications);
         Assert.AreEqual(AppTheme.Dark, reloaded.Theme);
         Assert.IsTrue(reloaded.DebugLogging);
+        Assert.IsTrue(reloaded.HideTray);
+        Assert.IsTrue(reloaded.HideTrayWhileDisconnected);
         Assert.IsFalse(reloaded.IsAutoConnectEnabled("AC:80:0A:12:34:56"));
     }
 

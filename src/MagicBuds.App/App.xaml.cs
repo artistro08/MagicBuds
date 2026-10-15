@@ -35,6 +35,8 @@ public partial class App : Application, IDisposable
     private GlobalShortcuts? _shortcuts;
     private EventWaitHandle? _quitRequest;
     private RegisteredWaitHandle? _quitWait;
+    private EventWaitHandle? _showRequest;
+    private RegisteredWaitHandle? _showWait;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _trimTimer;
 
     public App()
@@ -137,7 +139,18 @@ public partial class App : Application, IDisposable
         _trayIcon.PopupClosing += (_, _) => _trayTooltip.Hide();
         _trayIcon.Invoked += (_, _) => _trayTooltip.Hide();
         _trayIcon.ContextMenuRequested += (_, _) => _trayTooltip.Hide();
-        _trayIcon.Show();
+
+        // Tray Visibility: "Hide the tray icon" hides it for good; "until my buds connect" shows
+        // it only while Windows has buds connected
+        _manager.ConnectionStateChanged += (_, _) => _flyoutWindow.DispatcherQueue.TryEnqueue(UpdateTrayVisibility);
+        _settingsViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(SettingsViewModel.HideTray) or nameof(SettingsViewModel.HideTrayWhileDisconnected))
+            {
+                UpdateTrayVisibility();
+            }
+        };
+        UpdateTrayVisibility();
 
         // Global Shortcuts: registered on the tray icon's window; each switches the shown buds' noise mode
         _shortcuts = new GlobalShortcuts(_loggerFactory.CreateLogger<GlobalShortcuts>());
@@ -148,6 +161,7 @@ public partial class App : Application, IDisposable
         ApplyTheme(_settings.Theme);
         _manager.Start();
         WatchForQuitRequests();
+        WatchForShowRequests();
         AppLog.Started(_logger, AppIdentity.Version);
 
         // Startup itself leaves a lot behind that the idle tray app never needs
@@ -165,6 +179,38 @@ public partial class App : Application, IDisposable
             null,
             Timeout.Infinite,
             executeOnlyOnce: true);
+    }
+
+    // Opening MagicBuds again (see Program) signals this event; open Settings, since the tray
+    // icon may be hidden
+    private void WatchForShowRequests()
+    {
+        var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        _showRequest = new EventWaitHandle(false, EventResetMode.AutoReset, Program.ShowEventName);
+        _showWait = ThreadPool.RegisterWaitForSingleObject(
+            _showRequest,
+            (_, _) => dispatcher.TryEnqueue(() => ShowSettings()),
+            null,
+            Timeout.Infinite,
+            executeOnlyOnce: false);
+    }
+
+    private void UpdateTrayVisibility()
+    {
+        if (_trayIcon is null || _settings is null || _manager is null)
+        {
+            return;
+        }
+
+        var budsConnected = _manager.Headsets.Any(headset => headset.IsWindowsConnected);
+        if (!_settings.HideTray && (!_settings.HideTrayWhileDisconnected || budsConnected))
+        {
+            _trayIcon.Show();
+            return;
+        }
+        _flyoutWindow?.HideFlyout();
+        _trayTooltip?.Hide();
+        _trayIcon.Hide();
     }
 
     // The buds the flyout shows, or else the first connected ones
@@ -311,6 +357,8 @@ public partial class App : Application, IDisposable
         _notifications?.Dispose();
         _quitWait?.Unregister(null);
         _quitRequest?.Dispose();
+        _showWait?.Unregister(null);
+        _showRequest?.Dispose();
         _loggerFactory?.Dispose();
         GC.SuppressFinalize(this);
     }
