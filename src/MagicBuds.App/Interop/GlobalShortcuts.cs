@@ -90,6 +90,11 @@ public sealed class GlobalShortcuts(ILogger logger)
     /// <summary>True when the saved combination for <paramref name="action"/> is held by Windows or another app.</summary>
     public bool IsTaken(ShortcutAction action) => _taken.Contains(action);
 
+    /// <summary>
+    /// The shortcut is set and Windows accepted it, so pressing it works.
+    /// </summary>
+    public bool IsRegistered(ShortcutAction action) => _registered.Contains(action);
+
     /// <summary>A <c>WM_HOTKEY</c> arrived with this ID.</summary>
     public void OnHotkey(int id)
     {

@@ -135,6 +135,24 @@ public sealed class SettingsViewModel : ObservableObject
 
     public static IReadOnlyList<string> ThemeOptions { get; } = ["Use system setting", "Light", "Dark"];
 
+    // Hidden Tray Launch: the dropdown's choices, in HiddenTrayLaunch order
+    public static IReadOnlyList<string> HiddenTrayLaunchOptions { get; } = ["Open Settings", "Open the flyout", "Do nothing"];
+
+    // Hidden Tray Launch: the dropdown's selection
+    public int HiddenTrayLaunchIndex
+    {
+        get => (int)_settings.HiddenTrayLaunch;
+        set
+        {
+            if (!Enum.IsDefined((HiddenTrayLaunch)value) || value == (int)_settings.HiddenTrayLaunch)
+            {
+                return;
+            }
+            _settings.HiddenTrayLaunch = (HiddenTrayLaunch)value;
+            OnPropertyChanged();
+        }
+    }
+
     public int ThemeIndex
     {
         get => (int)_settings.Theme;

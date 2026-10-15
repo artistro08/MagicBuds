@@ -14,20 +14,31 @@ public enum AppTheme
 }
 
 /// <summary>
+/// What opening MagicBuds by hand does while its tray icon is hidden.
+/// </summary>
+public enum HiddenTrayLaunch
+{
+    OpenSettings,
+    OpenFlyout,
+    Nothing,
+}
+
+/// <summary>
 /// Typed access to every app setting.
 /// </summary>
 public sealed class AppSettings
 {
-    private const string RememberedHeadsetKey = "RememberedHeadset";
-    private const string LowBatteryNotificationsKey = "LowBatteryNotifications";
-    private const string ThemeKey = "Theme";
-    private const string DebugLoggingKey = "DebugLogging";
-    private const string HideTrayKey = "HideTray";
+    private const string RememberedHeadsetKey         = "RememberedHeadset";
+    private const string LowBatteryNotificationsKey   = "LowBatteryNotifications";
+    private const string ThemeKey                     = "Theme";
+    private const string DebugLoggingKey              = "DebugLogging";
+    private const string HideTrayKey                  = "HideTray";
     private const string HideTrayWhileDisconnectedKey = "HideTrayWhileDisconnected";
-    private const string AutoConnectKeyPrefix = "AutoConnect.";
-    private const string KnownHeadsetKeyPrefix = "KnownHeadset.";
-    private const string ShortcutKeyPrefix = "Shortcut.";
-    private const string BudsColorKeyPrefix = "BudsColor.";
+    private const string HiddenTrayLaunchKey          = "HiddenTrayLaunch";
+    private const string AutoConnectKeyPrefix         = "AutoConnect.";
+    private const string KnownHeadsetKeyPrefix        = "KnownHeadset.";
+    private const string ShortcutKeyPrefix            = "Shortcut.";
+    private const string BudsColorKeyPrefix           = "BudsColor.";
 
     private readonly ISettingsStore _store;
 
@@ -81,6 +92,23 @@ public sealed class AppSettings
         get => GetBool(HideTrayWhileDisconnectedKey, false);
         set => SetBool(HideTrayWhileDisconnectedKey, value);
     }
+
+    /// <summary>
+    /// What opening MagicBuds by hand does while the tray icon is hidden. An unknown saved value
+    /// opens Settings.
+    /// </summary>
+    public HiddenTrayLaunch HiddenTrayLaunch
+    {
+        get => Enum.TryParse<HiddenTrayLaunch>(_store.GetString(HiddenTrayLaunchKey), out var action) && Enum.IsDefined(action)
+            ? action
+            : HiddenTrayLaunch.OpenSettings;
+        set => _store.SetString(HiddenTrayLaunchKey, value.ToString());
+    }
+
+    /// <summary>
+    /// Whether the tray icon shows, given whether Windows has any buds connected.
+    /// </summary>
+    public bool ShowsTrayIcon(bool budsConnected) => !HideTray && (!HideTrayWhileDisconnected || budsConnected);
 
     /// <summary>
     /// Device name the buds had when first recognized as Pixel Buds, so they keep working after

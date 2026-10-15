@@ -77,10 +77,44 @@ public sealed class RegistryStartupServiceTests
         Assert.IsTrue(await service.IsEnabledAsync());
         using (var key = Registry.CurrentUser.OpenSubKey(TestKey))
         {
-            Assert.AreEqual("\"C:\\Apps\\MagicBuds.exe\"",key?.GetValue(RegistryStartupService.ValueName));
+            Assert.AreEqual("\"C:\\Apps\\MagicBuds.exe\" --startup",key?.GetValue(RegistryStartupService.ValueName));
         }
 
         Assert.IsFalse(await service.SetEnabledAsync(false));
         Assert.IsFalse(await service.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task OlderEntryGetsTheStartupArgument()
+    {
+        using (var key = Registry.CurrentUser.CreateSubKey(TestKey))
+        {
+            key.SetValue(RegistryStartupService.ValueName, "\"c:\\apps\\MagicBuds.exe\"");
+        }
+        var service = new RegistryStartupService(@"C:\Apps\MagicBuds.exe", TestKey);
+
+        Assert.IsTrue(service.UpgradeEntry());
+        Assert.IsTrue(await service.IsEnabledAsync());
+        using (var key = Registry.CurrentUser.OpenSubKey(TestKey))
+        {
+            Assert.AreEqual("\"C:\\Apps\\MagicBuds.exe\" --startup", key?.GetValue(RegistryStartupService.ValueName));
+        }
+    }
+
+    [TestMethod]
+    public async Task OtherInstallsEntryIsLeftAlone()
+    {
+        using (var key = Registry.CurrentUser.CreateSubKey(TestKey))
+        {
+            key.SetValue(RegistryStartupService.ValueName, "\"D:\\Other\\MagicBuds.exe\"");
+        }
+        var service = new RegistryStartupService(@"C:\Apps\MagicBuds.exe", TestKey);
+
+        Assert.IsFalse(service.UpgradeEntry());
+        Assert.IsTrue(await service.IsEnabledAsync());
+        using (var key = Registry.CurrentUser.OpenSubKey(TestKey))
+        {
+            Assert.AreEqual("\"D:\\Other\\MagicBuds.exe\"", key?.GetValue(RegistryStartupService.ValueName));
+        }
     }
 }

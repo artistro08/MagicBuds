@@ -98,9 +98,14 @@ internal sealed class TrayIcon : IDisposable
     /// </summary>
     public IntPtr Handle => _hwnd;
 
+    /// <summary>
+    /// The icon is meant to be on the tray (it's re-added if Explorer restarts).
+    /// </summary>
+    public bool IsVisible => _visible;
+
     public void Show()
     {
-        if (_visible)
+        if (_visible || _disposed)
         {
             return;
         }
@@ -111,15 +116,17 @@ internal sealed class TrayIcon : IDisposable
     /// <summary>
     /// Takes the icon off the tray. Its window stays, so global shortcuts keep working.
     /// </summary>
-    public void Hide()
+    /// <returns>True when the icon was showing until now.</returns>
+    public bool Hide()
     {
         if (!_visible)
         {
-            return;
+            return false;
         }
         _visible = false;
         var data = CreateData(0);
         NativeMethods.Shell_NotifyIconW(NativeMethods.NIM_DELETE, ref data);
+        return true;
     }
 
     private void Add()
@@ -158,10 +165,9 @@ internal sealed class TrayIcon : IDisposable
         {
             return;
         }
+        Hide();
         _disposed = true;
 
-        var data = CreateData(0);
-        NativeMethods.Shell_NotifyIconW(NativeMethods.NIM_DELETE, ref data);
         NativeMethods.DestroyWindow(_hwnd);
         if (_icon != IntPtr.Zero)
         {

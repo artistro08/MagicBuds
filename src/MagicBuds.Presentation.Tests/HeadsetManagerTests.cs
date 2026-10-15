@@ -42,6 +42,18 @@ public sealed class HeadsetManagerTests
     public void StartsWatchingWindowsDevices() => Assert.IsTrue(_source.IsWatching);
 
     [TestMethod]
+    public void EnumeratedCompletesOnceWindowsHasListedTheDevices()
+    {
+        _source.Report(Xm6);
+        Assert.IsFalse(_manager.Enumerated.IsCompleted);
+
+        _source.CompleteEnumeration();
+
+        Assert.IsTrue(_manager.Enumerated.Wait(TimeSpan.FromSeconds(5)));
+        Assert.IsTrue(_manager.Headsets.Single().IsWindowsConnected);
+    }
+
+    [TestMethod]
     public async Task ConnectedPixelBudsAreAddedAndConnected()
     {
         ManagedHeadset? added = null;

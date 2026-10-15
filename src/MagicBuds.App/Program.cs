@@ -22,9 +22,17 @@ public static class Program
     public const string QuitEventName = "MagicBuds.Quit";
 
     /// <summary>
-    /// Signaled by a second launch; the running copy opens Settings.
+    /// Signaled each time MagicBuds is opened by hand, by the copy that starts up or a second
+    /// launch; the running copy does what
+    /// <see cref="Presentation.Settings.AppSettings.HiddenTrayLaunch"/> says if its tray icon is hidden.
     /// </summary>
     public const string ShowEventName = "MagicBuds.Show";
+
+    /// <summary>
+    /// The running copy's end of <see cref="ShowEventName"/>, made before the single-instance
+    /// check, so a second launch while this copy is still starting isn't lost.
+    /// </summary>
+    public static EventWaitHandle? ShowRequest { get; private set; }
 
     [STAThread]
     private static void Main(string[] args)
@@ -42,25 +50,55 @@ public static class Program
             return;
         }
 
-        // A second launch exits right away. Opening MagicBuds by hand also asks the running copy
-        // to show Settings, since its tray icon may be hidden; the startup task doesn't.
+        // Opened By Hand: a plain launch with no arguments. The MSIX startup task and notification
+        // clicks are their own activation kinds; the classic install's start at sign-in passes
+        // --startup and its notification clicks pass the buds' ID.
+        var openedByHand = AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.Launch
+            && args.Length == 0;
+
+        // Every launch makes or opens the show event before checking for a running copy, so it
+        // always exists by the time a second launch looks for it
+        var showRequest = OpenShowEvent();
+
+        // A second launch exits right away; opened by hand, it tells the running copy first and
+        // lets it take the foreground, which Windows would otherwise refuse a background app
         var instance = AppInstance.FindOrRegisterForKey(InstanceKey);
         if (!instance.IsCurrent)
         {
-            if (AppInstance.GetCurrent().GetActivatedEventArgs().Kind == ExtendedActivationKind.Launch
-                && EventWaitHandle.TryOpenExisting(ShowEventName, out var show))
+            if (openedByHand && showRequest is not null)
             {
-                show.Set();
-                show.Dispose();
+                NativeMethods.AllowSetForegroundWindow(NativeMethods.ASFW_ANY);
+                showRequest.Set();
             }
+            showRequest?.Dispose();
             return;
         }
 
+        // This copy opened by hand asks itself, the same way; the app picks it up once it's watching
+        ShowRequest = showRequest;
+        if (openedByHand)
+        {
+            ShowRequest?.Set();
+        }
         Application.Start(callbackParams =>
         {
             var context = new DispatcherQueueSynchronizationContext(DispatcherQueue.GetForCurrentThread());
             SynchronizationContext.SetSynchronizationContext(context);
             _ = new App();
         });
+        ShowRequest?.Dispose();
+    }
+
+    // Null when another process owns the name (an elevated copy, say); the app runs without it
+    private static EventWaitHandle? OpenShowEvent()
+    {
+        try
+        {
+            return new EventWaitHandle(false, EventResetMode.AutoReset, ShowEventName);
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or WaitHandleCannotBeOpenedException or IOException)
+        {
+            return null;
+        }
     }
 }

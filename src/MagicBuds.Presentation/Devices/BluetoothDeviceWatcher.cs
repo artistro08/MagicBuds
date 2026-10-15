@@ -21,6 +21,8 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
 
     public event EventHandler<string>? DeviceRemoved;
 
+    public event EventHandler? EnumerationCompleted;
+
     public void StartWatching()
     {
         if (_watcher is not null)
@@ -35,6 +37,8 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
         _watcher.Added += OnAdded;
         _watcher.Updated += OnUpdated;
         _watcher.Removed += OnRemoved;
+        _watcher.EnumerationCompleted += OnEnumerationCompleted;
+        _watcher.Stopped += OnStopped;
         _watcher.Start();
     }
 
@@ -48,6 +52,8 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
         _watcher.Added -= OnAdded;
         _watcher.Updated -= OnUpdated;
         _watcher.Removed -= OnRemoved;
+        _watcher.EnumerationCompleted -= OnEnumerationCompleted;
+        _watcher.Stopped -= OnStopped;
         if (_watcher.Status is DeviceWatcherStatus.Started or DeviceWatcherStatus.EnumerationCompleted)
         {
             _watcher.Stop();
@@ -101,6 +107,11 @@ public sealed class BluetoothDeviceWatcher : IBluetoothDeviceSource, IDisposable
         }
         DeviceChanged?.Invoke(this, device);
     }
+
+    private void OnEnumerationCompleted(DeviceWatcher sender, object args) => EnumerationCompleted?.Invoke(this, EventArgs.Empty);
+
+    // A watcher that stops or fails before finishing has listed all it ever will
+    private void OnStopped(DeviceWatcher sender, object args) => EnumerationCompleted?.Invoke(this, EventArgs.Empty);
 
     private void OnRemoved(DeviceWatcher sender, DeviceInformationUpdate update)
     {
