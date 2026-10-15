@@ -74,13 +74,35 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
-    public void ShortcutSendsTheModeEvenWhenItsAlreadyOn()
+    public void ShortcutSwitchesToANewMode()
+    {
+        _viewModel.SelectNoiseMode(NoiseMode.Transparency, resend: true);
+
+        Assert.IsTrue(_viewModel.IsTransparency);
+        CollectionAssert.AreEqual(new object[] { NoiseMode.Transparency }, _headset.Commands);
+    }
+
+    [TestMethod]
+    public void ShortcutResendsTheModeThatsAlreadyOn()
     {
         _viewModel.SelectNoiseMode(NoiseMode.Adaptive);
         _viewModel.SelectNoiseMode(NoiseMode.Adaptive);
-        _viewModel.ApplyNoiseMode(NoiseMode.Adaptive);
+        _viewModel.SelectNoiseMode(NoiseMode.Adaptive, resend: true);
 
+        Assert.IsTrue(_viewModel.IsAdaptive);
         CollectionAssert.AreEqual(new object[] { NoiseMode.Adaptive, NoiseMode.Adaptive }, _headset.Commands);
+    }
+
+    [TestMethod]
+    public void FailedResendShowsNoError()
+    {
+        _viewModel.SelectNoiseMode(NoiseMode.Adaptive);
+        _headset.FailNextCommandWith = new IOException("The buds aren't connected.");
+
+        _viewModel.SelectNoiseMode(NoiseMode.Adaptive, resend: true);
+
+        Assert.IsNull(_viewModel.ErrorMessage);
+        Assert.IsTrue(_viewModel.IsAdaptive);
     }
 
     [TestMethod]
