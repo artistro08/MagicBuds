@@ -441,6 +441,20 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>
+    /// Switches to <paramref name="mode"/> for a shortcut. A mode that's already on is sent again
+    /// anyway, so the buds still play their tone and the press doesn't go unanswered.
+    /// </summary>
+    public void ApplyNoiseMode(NoiseMode mode)
+    {
+        if (mode != _shown.NoiseMode)
+        {
+            SelectNoiseMode(mode);
+            return;
+        }
+        _ = RunCommandAsync(() => _headset.SetNoiseModeAsync(mode), "noise control");
+    }
+
+    /// <summary>
     /// Settings changed outside this view model (the manager's Reconnect turns auto-connect back on).
     /// </summary>
     internal void RaiseAutoConnectChanged()

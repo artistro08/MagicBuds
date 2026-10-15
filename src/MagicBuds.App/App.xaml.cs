@@ -188,7 +188,7 @@ public partial class App : Application, IDisposable
             ? current
             : connected.Count > 0 ? connected[0] : null;
         AppLog.ShortcutPressed(_logger, name, headset is not null);
-        headset?.SelectNoiseMode(ShortcutActions.NoiseModeFor(action));
+        headset?.ApplyNoiseMode(ShortcutActions.NoiseModeFor(action));
     }
 
     // The right-click menu's window is made on first use, since most sessions never open it

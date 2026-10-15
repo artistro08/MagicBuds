@@ -74,6 +74,16 @@ public sealed class HeadsetViewModelTests
     }
 
     [TestMethod]
+    public void ShortcutSendsTheModeEvenWhenItsAlreadyOn()
+    {
+        _viewModel.SelectNoiseMode(NoiseMode.Adaptive);
+        _viewModel.SelectNoiseMode(NoiseMode.Adaptive);
+        _viewModel.ApplyNoiseMode(NoiseMode.Adaptive);
+
+        CollectionAssert.AreEqual(new object[] { NoiseMode.Adaptive, NoiseMode.Adaptive }, _headset.Commands);
+    }
+
+    [TestMethod]
     public void FailedCommandPutsTheControlBackAndShowsWhy()
     {
         _headset.FailNextCommandWith = new TimeoutException();
