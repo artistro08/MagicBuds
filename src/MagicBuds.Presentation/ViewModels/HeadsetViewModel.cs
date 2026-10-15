@@ -431,13 +431,25 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     // METHODS
     // =========================================================================
 
-    public void SelectNoiseMode(NoiseMode mode)
+    /// <summary>
+    /// Switches the buds to <paramref name="mode"/>.
+    /// </summary>
+    /// <param name="resend">
+    /// Sends a mode that's already on again, so the buds still play their tone (shortcuts use
+    /// this so a press never goes unanswered). A resend that fails only gets logged, since
+    /// nothing changed.
+    /// </param>
+    public void SelectNoiseMode(NoiseMode mode, bool resend = false)
     {
-        if (mode == _shown.NoiseMode)
+        if (mode != _shown.NoiseMode)
         {
+            Change(_shown with { NoiseMode = mode }, () => _headset.SetNoiseModeAsync(mode), "noise control");
             return;
         }
-        Change(_shown with { NoiseMode = mode }, () => _headset.SetNoiseModeAsync(mode), "noise control");
+        if (resend)
+        {
+            _ = RunCommandAsync(() => _headset.SetNoiseModeAsync(mode), "noise control", showError: false);
+        }
     }
 
     /// <summary>
@@ -575,7 +587,7 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
     }
 
     // Once the last command finishes, the controls take the buds' confirmed state
-    private async Task RunCommandAsync(Func<Task> command, string setting)
+    private async Task RunCommandAsync(Func<Task> command, string setting, bool showError = true)
     {
         Interlocked.Increment(ref _commandsInFlight);
         try
@@ -585,7 +597,10 @@ public sealed class HeadsetViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             LogMessages.CommandFailed(_logger, ex, setting, DeviceName);
-            _ui.Post(() => ShowError(HeadsetErrorMessages.Describe(ex)));
+            if (showError)
+            {
+                _ui.Post(() => ShowError(HeadsetErrorMessages.Describe(ex)));
+            }
         }
         finally
         {
