@@ -99,7 +99,59 @@ public sealed class SettingsViewModel : ObservableObject
         }
     }
 
+    public bool HideTray
+    {
+        get => _settings.HideTray;
+        set
+        {
+            if (value == _settings.HideTray)
+            {
+                return;
+            }
+            _settings.HideTray = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanHideTrayWhileDisconnected));
+        }
+    }
+
+    /// <summary>
+    /// "Until my buds connect" only matters while the icon isn't hidden for good.
+    /// </summary>
+    public bool CanHideTrayWhileDisconnected => !HideTray;
+
+    public bool HideTrayWhileDisconnected
+    {
+        get => _settings.HideTrayWhileDisconnected;
+        set
+        {
+            if (value == _settings.HideTrayWhileDisconnected)
+            {
+                return;
+            }
+            _settings.HideTrayWhileDisconnected = value;
+            OnPropertyChanged();
+        }
+    }
+
     public static IReadOnlyList<string> ThemeOptions { get; } = ["Use system setting", "Light", "Dark"];
+
+    // Hidden Tray Launch: the dropdown's choices, in HiddenTrayLaunch order
+    public static IReadOnlyList<string> HiddenTrayLaunchOptions { get; } = ["Open Settings", "Open the flyout", "Do nothing"];
+
+    // Hidden Tray Launch: the dropdown's selection
+    public int HiddenTrayLaunchIndex
+    {
+        get => (int)_settings.HiddenTrayLaunch;
+        set
+        {
+            if (!Enum.IsDefined((HiddenTrayLaunch)value) || value == (int)_settings.HiddenTrayLaunch)
+            {
+                return;
+            }
+            _settings.HiddenTrayLaunch = (HiddenTrayLaunch)value;
+            OnPropertyChanged();
+        }
+    }
 
     public int ThemeIndex
     {

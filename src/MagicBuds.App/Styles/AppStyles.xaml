@@ -108,6 +108,15 @@
         <Setter Property="MinHeight" Value="68" />
     </Style>
 
+    <!-- Settings Expander: a card whose header holds a setting and whose content holds the
+         settings that go with it -->
+    <Style x:Key="SettingsExpanderStyle" TargetType="Expander">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="MinHeight" Value="68" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
     <!-- Settings Page: scrolls, pads, and centers the content at up to 900 wide. The padded Grid
          fills the width so the centering uses the content's real width; centered straight in the
          ScrollViewer, it's pushed off the right edge on wide windows. The scrollbar stays on the

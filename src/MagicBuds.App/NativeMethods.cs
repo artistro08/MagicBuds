@@ -206,6 +206,13 @@ internal static class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool SetForegroundWindow(IntPtr hwnd);
 
+    // Any process may take the foreground next
+    public const uint ASFW_ANY = unchecked((uint)-1);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool AllowSetForegroundWindow(uint processId);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern IntPtr LoadImageW(IntPtr instance, string name, uint type, int width, int height, uint flags);
 

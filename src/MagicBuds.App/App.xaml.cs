@@ -35,6 +35,11 @@ public partial class App : Application, IDisposable
     private GlobalShortcuts? _shortcuts;
     private EventWaitHandle? _quitRequest;
     private RegisteredWaitHandle? _quitWait;
+    private RegisteredWaitHandle? _showWait;
+    private bool _quitting;
+    private bool _openingWhileHidden;
+
+    private static readonly TimeSpan EnumerationTimeout = TimeSpan.FromSeconds(5);
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _trimTimer;
 
     public App()
@@ -96,11 +101,16 @@ public partial class App : Application, IDisposable
         _flyout.EqualizerRequested += (_, _) => ShowSettings("Buds");
         _flyout.QuitRequested += (_, _) => Quit();
 
+        // Startup Entry: the classic install's sign-in entry from before --startup gets it now, so
+        // the next sign-in doesn't count as being opened by hand
+        IStartupTaskService startupService = AppIdentity.IsPackaged ? new StartupTaskService() : new RegistryStartupService(Environment.ProcessPath!);
+        (startupService as RegistryStartupService)?.UpgradeEntry();
+
         _settingsViewModel = new SettingsViewModel(
             _flyout,
             _settings,
             levelSwitch,
-            AppIdentity.IsPackaged ? new StartupTaskService() : new RegistryStartupService(Environment.ProcessPath!),
+            startupService,
             ApplyTheme,
             OpenFolder,
             logFolder,
@@ -137,7 +147,19 @@ public partial class App : Application, IDisposable
         _trayIcon.PopupClosing += (_, _) => _trayTooltip.Hide();
         _trayIcon.Invoked += (_, _) => _trayTooltip.Hide();
         _trayIcon.ContextMenuRequested += (_, _) => _trayTooltip.Hide();
-        _trayIcon.Show();
+
+        // Tray Visibility: "Hide the tray icon" hides it for good; "until my buds connect" shows
+        // it only while Windows has buds connected
+        _manager.ConnectionStateChanged += (_, _) => _flyoutWindow.DispatcherQueue.TryEnqueue(UpdateTrayVisibility);
+        _manager.HeadsetRemoved += (_, _) => _flyoutWindow.DispatcherQueue.TryEnqueue(UpdateTrayVisibility);
+        _settingsViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(SettingsViewModel.HideTray) or nameof(SettingsViewModel.HideTrayWhileDisconnected))
+            {
+                UpdateTrayVisibility();
+            }
+        };
+        UpdateTrayVisibility();
 
         // Global Shortcuts: registered on the tray icon's window; each switches the shown buds' noise mode
         _shortcuts = new GlobalShortcuts(_loggerFactory.CreateLogger<GlobalShortcuts>());
@@ -148,6 +170,7 @@ public partial class App : Application, IDisposable
         ApplyTheme(_settings.Theme);
         _manager.Start();
         WatchForQuitRequests();
+        WatchForShowRequests();
         AppLog.Started(_logger, AppIdentity.Version);
 
         // Startup itself leaves a lot behind that the idle tray app never needs
@@ -157,14 +180,120 @@ public partial class App : Application, IDisposable
     // MagicBuds.exe --quit signals this event (see Program); quit like the tray menu does
     private void WatchForQuitRequests()
     {
-        var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         _quitRequest = new EventWaitHandle(false, EventResetMode.AutoReset, Program.QuitEventName);
-        _quitWait = ThreadPool.RegisterWaitForSingleObject(
-            _quitRequest,
-            (_, _) => dispatcher.TryEnqueue(Quit),
+        _quitWait = WatchEvent(_quitRequest, Quit, once: true);
+    }
+
+    // Opening MagicBuds by hand signals this event, this copy included (see Program)
+    private void WatchForShowRequests()
+    {
+        if (Program.ShowRequest is not null)
+        {
+            _showWait = WatchEvent(Program.ShowRequest, () => _ = OpenWhileTrayHiddenAsync(), once: false);
+        }
+    }
+
+    // Runs an action on the UI thread each time a named event is signaled
+    private static RegisteredWaitHandle WatchEvent(WaitHandle handle, Action action, bool once)
+    {
+        var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        return ThreadPool.RegisterWaitForSingleObject(
+            handle,
+            (_, _) => dispatcher.TryEnqueue(() => action()),
             null,
             Timeout.Infinite,
-            executeOnlyOnce: true);
+            executeOnlyOnce: once);
+    }
+
+    /// <summary>
+    /// Does what "When I open MagicBuds while the icon is hidden" says, if the icon is hidden.
+    /// </summary>
+    /// <remarks>
+    /// Waits for Windows to list the paired buds first (up to a few seconds), so connected buds
+    /// that are about to bring the icon back don't count as hidden.
+    /// </remarks>
+    private async Task OpenWhileTrayHiddenAsync()
+    {
+        // One at a time: a second launch during startup must not open things twice
+        if (_quitting || _openingWhileHidden || _settings is null || _manager is null || _flyoutWindow is null)
+        {
+            return;
+        }
+        _openingWhileHidden = true;
+
+        try
+        {
+            // Only "until my buds connect" depends on what's connected
+            if (_settings.HideTrayWhileDisconnected && !_settings.HideTray)
+            {
+                try
+                {
+                    await _manager.Enumerated.WaitAsync(EnumerationTimeout);
+                }
+                catch (TimeoutException)
+                {
+                    // Go on with the buds known so far
+                }
+            }
+
+            if (_quitting || _settings.ShowsTrayIcon(AnyBudsConnected()))
+            {
+                return;
+            }
+
+            var action = _settings.HiddenTrayLaunch;
+
+            // Never Locked Out: "Do nothing" with the icon hidden (for good, or with no buds to
+            // bring it back) and no working Open the flyout shortcut would leave no way back in
+            if (action == HiddenTrayLaunch.Nothing && _shortcuts?.IsRegistered(ShortcutAction.OpenFlyout) != true)
+            {
+                action = HiddenTrayLaunch.OpenSettings;
+            }
+
+            switch (action)
+            {
+                case HiddenTrayLaunch.OpenSettings:
+                    ShowSettings();
+                    break;
+
+                // No icon to sit by, so on the screen the mouse is on
+                case HiddenTrayLaunch.OpenFlyout:
+                    _flyoutWindow.Open(null);
+                    break;
+            }
+        }
+        finally
+        {
+            _openingWhileHidden = false;
+        }
+    }
+
+    // Buds Connected: any paired buds Windows has connected right now
+    private bool AnyBudsConnected() => _manager?.Headsets.Any(headset => headset.IsWindowsConnected) ?? false;
+
+    // Tray Visibility: shows or hides the icon to match the settings and connected buds
+    private void UpdateTrayVisibility()
+    {
+        // A change queued just before quitting mustn't bring the icon back
+        if (_quitting || _trayIcon is null || _settings is null)
+        {
+            return;
+        }
+
+        if (_settings.ShowsTrayIcon(AnyBudsConnected()))
+        {
+            _trayIcon.Show();
+        }
+        // Only as the icon goes: a flyout opened by shortcut while it's hidden stays open
+        else if (_trayIcon.Hide())
+        {
+            _flyoutWindow?.HideFlyout();
+            _trayTooltip?.Hide();
+            _trayMenu?.HideMenu();
+        }
+
+        // Settings' Quit stands in for the tray menu's while the icon is gone
+        _settingsWindow?.ShowQuit(!_trayIcon.IsVisible);
     }
 
     // The buds the flyout shows, or else the first connected ones
@@ -264,10 +393,17 @@ public partial class App : Application, IDisposable
         {
             _settingsWindow = new SettingsWindow(_settingsViewModel, new ShortcutsContext(_shortcuts!, _settings));
             _settingsWindow.ApplyTheme(_settings.Theme);
+            _settingsWindow.QuitRequested += (_, _) => Quit();
+            _settingsWindow.ShowQuit(_trayIcon?.IsVisible != true);
             _settingsWindow.Closed += (_, _) =>
             {
                 _settingsWindow = null;
-                ScheduleMemoryTrim();
+
+                // Quitting from Settings closes it too; no trim on the way out
+                if (!_quitting)
+                {
+                    ScheduleMemoryTrim();
+                }
             };
         }
         if (page is not null)
@@ -299,6 +435,8 @@ public partial class App : Application, IDisposable
 
     public void Dispose()
     {
+        // A show request already queued must not open windows that are shutting down
+        _quitting = true;
         _trimTimer?.Stop();
         _shortcuts?.Suspend();
         _trayIcon?.Dispose();
@@ -311,6 +449,7 @@ public partial class App : Application, IDisposable
         _notifications?.Dispose();
         _quitWait?.Unregister(null);
         _quitRequest?.Dispose();
+        _showWait?.Unregister(null);
         _loggerFactory?.Dispose();
         GC.SuppressFinalize(this);
     }

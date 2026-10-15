@@ -27,6 +27,7 @@
             IsSettingsVisible="False"
             OpenPaneLength="240"
             PaneDisplayMode="Left"
+            ItemInvoked="OnItemInvoked"
             SelectionChanged="OnSelectionChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Devices" Tag="Devices">
@@ -64,6 +65,17 @@
                 <NavigationViewItem Content="About" Tag="About">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE946;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <!-- Quit: an action, not a page; only shown while the tray icon (and its Quit) is hidden -->
+                <NavigationViewItem
+                    x:Name="QuitItem"
+                    Content="Quit"
+                    SelectsOnInvoked="False"
+                    Tag="Quit">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7E8;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>

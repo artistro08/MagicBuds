@@ -51,6 +51,16 @@ public sealed partial class SettingsWindow : Window
         Closed += (_, _) => (ContentFrame.Content as ShortcutsPage)?.CloseDialogs();
     }
 
+    /// <summary>
+    /// The Quit menu item was clicked.
+    /// </summary>
+    public event EventHandler? QuitRequested;
+
+    /// <summary>
+    /// Shows the Quit menu item, for while the tray icon (and its menu's Quit) is hidden.
+    /// </summary>
+    public void ShowQuit(bool visible) => QuitItem.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+
     public void ApplyTheme(AppTheme theme) => RootGrid.RequestedTheme = theme switch
     {
         AppTheme.Light => ElementTheme.Light,
@@ -64,6 +74,14 @@ public sealed partial class SettingsWindow : Window
     public void ShowPage(string tag) => Navigation.SelectedItem = Navigation.MenuItems
         .OfType<NavigationViewItem>()
         .FirstOrDefault(item => item.Tag as string == tag) ?? Navigation.SelectedItem;
+
+    private void OnItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer?.Tag as string == "Quit")
+        {
+            QuitRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     private void OnPaneToggleRequested(TitleBar sender, object args) => Navigation.IsPaneOpen = !Navigation.IsPaneOpen;
 

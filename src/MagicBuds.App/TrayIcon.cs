@@ -39,6 +39,7 @@ internal sealed class TrayIcon : IDisposable
     private readonly IntPtr _hwnd;
     private readonly uint _taskbarCreatedMessage;
     private IntPtr _icon;
+    private bool _visible;
     private bool _disposed;
 
     public TrayIcon(string tooltip)
@@ -97,7 +98,38 @@ internal sealed class TrayIcon : IDisposable
     /// </summary>
     public IntPtr Handle => _hwnd;
 
+    /// <summary>
+    /// The icon is meant to be on the tray (it's re-added if Explorer restarts).
+    /// </summary>
+    public bool IsVisible => _visible;
+
     public void Show()
+    {
+        if (_visible || _disposed)
+        {
+            return;
+        }
+        _visible = true;
+        Add();
+    }
+
+    /// <summary>
+    /// Takes the icon off the tray. Its window stays, so global shortcuts keep working.
+    /// </summary>
+    /// <returns>True when the icon was showing until now.</returns>
+    public bool Hide()
+    {
+        if (!_visible)
+        {
+            return false;
+        }
+        _visible = false;
+        var data = CreateData(0);
+        NativeMethods.Shell_NotifyIconW(NativeMethods.NIM_DELETE, ref data);
+        return true;
+    }
+
+    private void Add()
     {
         LoadIcon();
 
@@ -133,10 +165,9 @@ internal sealed class TrayIcon : IDisposable
         {
             return;
         }
+        Hide();
         _disposed = true;
 
-        var data = CreateData(0);
-        NativeMethods.Shell_NotifyIconW(NativeMethods.NIM_DELETE, ref data);
         NativeMethods.DestroyWindow(_hwnd);
         if (_icon != IntPtr.Zero)
         {
@@ -211,7 +242,10 @@ internal sealed class TrayIcon : IDisposable
 
         if (message == _taskbarCreatedMessage)
         {
-            Show();
+            if (_visible)
+            {
+                Add();
+            }
             return IntPtr.Zero;
         }
 
