@@ -196,13 +196,13 @@ public sealed class HeadsetManager : IDisposable
             return;
         }
 
-        // Buds first seen under their Pixel Buds name are remembered by address, so they keep
-        // working after they're renamed in Windows.
+        // Buds are recognized by their Pixel Buds name or their control service (renamed before
+        // the app ever saw them), then remembered by address so they keep working after a rename.
         var id = NormalizeAddress(device.Address);
         var model = _settings.GetKnownHeadsetName(id);
         if (model is null)
         {
-            if (!PixelBudsNameFilter.IsPixelBuds(device.Name))
+            if (!device.OffersMaestro && !PixelBudsNameFilter.IsPixelBuds(device.Name))
             {
                 return;
             }

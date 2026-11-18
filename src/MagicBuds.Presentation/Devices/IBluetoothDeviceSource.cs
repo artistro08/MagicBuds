@@ -7,7 +7,9 @@ namespace MagicBuds.Presentation.Devices;
 /// <param name="Name">Friendly name, e.g. "Pixel Buds Pro 2".</param>
 /// <param name="Address">Bluetooth address, e.g. "ac:80:0a:12:34:56".</param>
 /// <param name="IsConnected">True while Windows has the device connected.</param>
-public sealed record BluetoothDeviceInfo(string Id, string Name, string Address, bool IsConnected);
+/// <param name="OffersMaestro">True when Windows has the Pixel Buds control service on file for it, so
+/// it's Pixel Buds whatever it's named.</param>
+public sealed record BluetoothDeviceInfo(string Id, string Name, string Address, bool IsConnected, bool OffersMaestro = false);
 
 /// <summary>
 /// Reports paired Bluetooth devices as they're found, connect, disconnect or get unpaired.
