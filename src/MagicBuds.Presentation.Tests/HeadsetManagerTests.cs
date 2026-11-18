@@ -113,6 +113,14 @@ public sealed class HeadsetManagerTests
     }
 
     [TestMethod]
+    public void BudsRenamedBeforeFirstSeenAreFoundByTheirService()
+    {
+        _source.Report(Xm6 with { Name = "Office Buds", OffersMaestro = true });
+
+        Assert.AreEqual("Office Buds", _manager.Headsets.Single().Name);
+    }
+
+    [TestMethod]
     public async Task PairedButDisconnectedHeadsetIsListedWithoutConnecting()
     {
         _source.Report(Xm6 with { IsConnected = false });
